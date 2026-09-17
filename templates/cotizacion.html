@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>{{ cotizacion.numero }}</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body>
+
+<main>
+
+<div class="hoja">
+
+<h1>COTIZACIÓN</h1>
+
+<h2>{{ cotizacion.numero }}</h2>
+
+{% if cliente %}
+
+<h3>CLIENTE</h3>
+
+<p><strong>Nombre:</strong> {{ cliente.nombre }}</p>
+
+<p><strong>Teléfono:</strong> {{ cliente.telefono }}</p>
+
+<p><strong>Dirección:</strong> {{ cliente.direccion }}</p>
+
+{% endif %}
+
+<table>
+
+<tr>
+<th>Producto</th>
+<th>Cantidad</th>
+<th>Largo</th>
+<th>Precio</th>
+<th>Subtotal</th>
+</tr>
+
+{% for d in detalles %}
+
+<tr>
+
+<td>{{ d.producto_nombre }}</td>
+
+<td>{{ d.cantidad }}</td>
+
+<td>
+{% if d.largo %}
+{{ d.largo }} m
+{% else %}
+-
+{% endif %}
+</td>
+
+<td>{{ "%.2f"|format(d.precio or 0) }} Bs</td>
+
+<td>{{ "%.2f"|format(d.subtotal or 0) }} Bs</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+<h3>Subtotal: {{ "%.2f"|format(cotizacion.subtotal or 0) }} Bs</h3>
+
+<h3>Descuento: {{ "%.2f"|format(cotizacion.descuento or 0) }} Bs</h3>
+
+<h2>TOTAL: {{ "%.2f"|format(cotizacion.total or 0) }} Bs</h2>
+
+<p>{{ cotizacion.observaciones }}</p>
+
+<button class="no-print" onclick="window.print()">
+🖨️ Imprimir
+</button>
+
+<a class="button no-print" href="{{ url_for('historial') }}">
+Volver
+</a>
+
+</div>
+
+</main>
+
+</body>
+
+</html>
