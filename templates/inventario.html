@@ -1,11 +1,13 @@
-+```html
+```html
 <!DOCTYPE html>
 <html lang="es">
 
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
 
 <title>Inventario</title>
 
@@ -84,6 +86,19 @@ th {
     font-weight: bold;
 }
 
+.btn-eliminar {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 7px;
+    cursor: pointer;
+}
+
+.btn-eliminar:hover {
+    opacity: 0.85;
+}
+
 </style>
 
 </head>
@@ -139,6 +154,7 @@ th {
 
 <h2>📦 EXISTENCIAS</h2>
 
+
 <div class="tabla-contenedor">
 
 <table>
@@ -158,6 +174,8 @@ th {
 <th>Unidad</th>
 
 <th>Estado</th>
+
+<th>Acción</th>
 
 </tr>
 
@@ -192,7 +210,9 @@ th {
 
 <td>
 
-{{ "%.2f"|format(e.cantidad_inicial or 0) }}
+{{ "%.2f"|format(
+    e.cantidad_inicial or 0
+) }}
 
 </td>
 
@@ -200,7 +220,9 @@ th {
 <td>
 
 <strong>
-{{ "%.2f"|format(e.cantidad_actual or 0) }}
+{{ "%.2f"|format(
+    e.cantidad_actual or 0
+) }}
 </strong>
 
 </td>
@@ -235,8 +257,8 @@ UNIDAD
 
 <td>
 
-
-{% if e.estado == "agotada" or (e.cantidad_actual or 0) <= 0 %}
+{% if e.estado == "agotada"
+      or (e.cantidad_actual or 0) <= 0 %}
 
 <span class="agotada">
 AGOTADA
@@ -250,6 +272,30 @@ DISPONIBLE
 
 {% endif %}
 
+</td>
+
+
+<td>
+
+<form
+    method="POST"
+    action="{{ url_for(
+        'eliminar_existencia',
+        id=e.id
+    ) }}"
+    onsubmit="return confirm(
+        '¿Seguro que quieres eliminar esta existencia?'
+    );"
+>
+
+<button
+    type="submit"
+    class="btn-eliminar"
+>
+🗑️ ELIMINAR
+</button>
+
+</form>
 
 </td>
 
@@ -259,17 +305,15 @@ DISPONIBLE
 
 {% else %}
 
-
 <tr>
 
-<td colspan="6">
+<td colspan="7">
 
 No hay existencias registradas.
 
 </td>
 
 </tr>
-
 
 {% endfor %}
 
@@ -289,110 +333,13 @@ No hay existencias registradas.
 <h2>➕ AGREGAR EXISTENCIA</h2>
 
 
-<form
-    method="POST"
-    action="{{ url_for('entrada_inventario') }}"
-    class="form-inventario"
->
+<p>
+Las nuevas existencias se agregan desde el producto correspondiente.
+</p>
 
-
-<div class="grupo">
-
-<h3>Presentación</h3>
-
-<input
-    name="presentacion"
-    type="text"
-    placeholder="Presentación"
-    required
->
-
-</div>
-
-
-
-<label>
-
-<strong>
-Cantidad de presentaciones
-</strong>
-
-</label>
-
-
-<input
-    name="cantidad_contenedores"
-    type="number"
-    min="1"
-    step="1"
-    placeholder="Cantidad"
-    required
->
-
-
-
-<label>
-
-<strong>
-Contenido de cada presentación
-</strong>
-
-</label>
-
-
-<input
-    name="cantidad_por_contenedor"
-    type="number"
-    min="0.01"
-    step="0.01"
-    placeholder="Cantidad"
-    required
->
-
-
-
-<label>
-
-<strong>
-Unidad de contenido
-</strong>
-
-</label>
-
-
-<select
-    name="unidad"
-    required
->
-
-<option value="">
-Seleccione la unidad
-</option>
-
-<option value="metros">
-METROS
-</option>
-
-<option value="kilos">
-KILOS
-</option>
-
-<option value="unidad">
-UNIDAD
-</option>
-
-</select>
-
-
-
-<button type="submit">
-
-📥 REGISTRAR ENTRADA
-
-</button>
-
-
-</form>
+<p>
+Ve a <strong>Productos</strong> para agregar una nueva entrada.
+</p>
 
 </section>
 
@@ -405,9 +352,7 @@ UNIDAD
 
 <div class="tabla-contenedor">
 
-
 <table>
-
 
 <thead>
 
@@ -455,7 +400,6 @@ UNIDAD
 
 <td>
 
-
 {% if m.tipo == "ENTRADA" %}
 
 <span class="entrada">
@@ -474,13 +418,14 @@ SALIDA
 
 {% endif %}
 
-
 </td>
 
 
 <td>
 
-{{ "%.2f"|format(m.cantidad or 0) }}
+{{ "%.2f"|format(
+    m.cantidad or 0
+) }}
 
 </td>
 
@@ -511,7 +456,6 @@ SALIDA
 
 {% else %}
 
-
 <tr>
 
 <td colspan="6">
@@ -522,15 +466,12 @@ No hay movimientos registrados.
 
 </tr>
 
-
 {% endfor %}
 
 
 </tbody>
 
-
 </table>
-
 
 </div>
 
