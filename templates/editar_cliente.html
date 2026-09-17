@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block titulo %}
+Editar Cliente
+{% endblock %}
+
+
+{% block contenido %}
+
+<div class="titulo-pagina">
+
+    <div>
+
+        <h1>
+            Editar Cliente
+        </h1>
+
+        <p>
+            Modifica los datos del cliente.
+        </p>
+
+    </div>
+
+</div>
+
+
+<section class="panel">
+
+    <form
+        action="/editar-cliente/{{ cliente['id'] }}"
+        method="POST"
+        class="formulario"
+    >
+
+
+        <div class="campo">
+
+            <label>
+                Nombre
+            </label>
+
+            <input
+                type="text"
+                name="nombre"
+                value="{{ cliente['nombre'] }}"
+                required
+            >
+
+        </div>
+
+
+        <div class="campo">
+
+            <label>
+                Teléfono
+            </label>
+
+            <input
+                type="text"
+                name="telefono"
+                value="{{ cliente['telefono'] }}"
+            >
+
+        </div>
+
+
+        <div class="campo">
+
+            <label>
+                Dirección
+            </label>
+
+            <input
+                type="text"
+                name="direccion"
+                value="{{ cliente['direccion'] }}"
+            >
+
+        </div>
+
+
+        <div class="campo">
+
+            <label>
+                Email
+            </label>
+
+            <input
+                type="email"
+                name="email"
+                value="{{ cliente['email'] }}"
+            >
+
+        </div>
+
+
+        <div class="acciones">
+
+            <button
+                type="submit"
+                class="boton boton-principal">
+
+                Guardar cambios
+
+            </button>
+
+            <a
+                href="/clientes"
+                class="boton boton-secundario">
+
+                Cancelar
+
+            </a>
+
+        </div>
+
+    </form>
+
+</section>
+
+{% endblock %}
