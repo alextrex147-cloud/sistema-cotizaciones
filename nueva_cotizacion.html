@@ -1,0 +1,509 @@
+{% extends "base.html" %}
+
+{% block titulo %}
+Nueva Cotización
+{% endblock %}
+
+
+{% block contenido %}
+
+<div class="titulo-pagina">
+
+    <div>
+
+        <h1>
+            Nueva Cotización
+        </h1>
+
+        <p>
+            Crea una cotización para tu cliente.
+        </p>
+
+    </div>
+
+</div>
+
+
+{% if not clientes %}
+
+<section class="alerta">
+
+    <strong>
+        No tienes clientes registrados.
+    </strong>
+
+    <p>
+        Primero debes registrar un cliente.
+    </p>
+
+    <a
+        href="/clientes"
+        class="boton boton-principal">
+
+        Registrar cliente
+
+    </a>
+
+</section>
+
+{% elif not productos %}
+
+<section class="alerta">
+
+    <strong>
+        No tienes productos registrados.
+    </strong>
+
+    <p>
+        Primero debes registrar productos.
+    </p>
+
+    <a
+        href="/productos"
+        class="boton boton-principal">
+
+        Registrar producto
+
+    </a>
+
+</section>
+
+{% else %}
+
+
+<form
+    action="/guardar-cotizacion"
+    method="POST"
+    id="formCotizacion"
+>
+
+
+<section class="panel">
+
+    <h2>
+        Datos del cliente
+    </h2>
+
+
+    <div class="formulario">
+
+
+        <div class="campo campo-grande">
+
+            <label>
+                Cliente
+            </label>
+
+            <select
+                name="cliente_id"
+                required
+            >
+
+                <option value="">
+                    Selecciona un cliente
+                </option>
+
+                {% for cliente in clientes %}
+
+                <option value="{{ cliente['id'] }}">
+
+                    {{ cliente['nombre'] }}
+
+                    {% if cliente['telefono'] %}
+                        - {{ cliente['telefono'] }}
+                    {% endif %}
+
+                </option>
+
+                {% endfor %}
+
+            </select>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<section class="panel">
+
+    <div class="panel-titulo">
+
+        <h2>
+            Productos
+        </h2>
+
+        <button
+            type="button"
+            class="boton boton-principal"
+            onclick="agregarFila()">
+
+            + Agregar producto
+
+        </button>
+
+    </div>
+
+
+    <div class="tabla-contenedor">
+
+        <table id="tablaProductos">
+
+            <thead>
+
+                <tr>
+
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Precio</th>
+                    <th>Subtotal</th>
+                    <th></th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody id="productosBody">
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <div class="totales">
+
+        <div>
+
+            <span>
+                Subtotal:
+            </span>
+
+            <strong id="subtotal">
+                Bs 0.00
+            </strong>
+
+        </div>
+
+
+        <div class="descuento-linea">
+
+            <label>
+                Descuento:
+            </label>
+
+            <input
+                type="number"
+                name="descuento"
+                id="descuento"
+                value="0"
+                min="0"
+                step="0.01"
+                oninput="calcularTotal()"
+            >
+
+            <span>
+                Bs
+            </span>
+
+        </div>
+
+
+        <div class="total-final">
+
+            <span>
+                TOTAL:
+            </span>
+
+            <strong id="total">
+                Bs 0.00
+            </strong>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<section class="panel">
+
+    <h2>
+        Observaciones
+    </h2>
+
+    <textarea
+        name="observaciones"
+        placeholder="Observaciones de la cotización..."
+        rows="4"
+    ></textarea>
+
+</section>
+
+
+
+<div class="acciones-finales">
+
+    <button
+        type="submit"
+        class="boton boton-grande boton-principal">
+
+        💾 Guardar Cotización
+
+    </button>
+
+
+    <a
+        href="/"
+        class="boton boton-grande boton-secundario">
+
+        Cancelar
+
+    </a>
+
+</div>
+
+
+</form>
+
+
+<script>
+
+const productos = [
+
+{% for producto in productos %}
+
+{
+    id: {{ producto["id"] }},
+    nombre: {{ producto["nombre"]|tojson }},
+    precio: {{ producto["precio"] }}
+},
+
+{% endfor %}
+
+];
+
+
+function agregarFila() {
+
+    const tbody = document.getElementById("productosBody");
+
+    const fila = document.createElement("tr");
+
+    let opciones = `
+        <option value="">
+            Seleccionar producto
+        </option>
+    `;
+
+    productos.forEach(producto => {
+
+        opciones += `
+            <option
+                value="${producto.id}"
+                data-precio="${producto.precio}"
+            >
+                ${producto.nombre}
+            </option>
+        `;
+
+    });
+
+
+    fila.innerHTML = `
+
+        <td>
+
+            <select
+                name="producto_id[]"
+                onchange="cambiarProducto(this)"
+                required
+            >
+
+                ${opciones}
+
+            </select>
+
+        </td>
+
+
+        <td>
+
+            <input
+                type="number"
+                name="cantidad[]"
+                value="1"
+                min="0.01"
+                step="0.01"
+                oninput="calcularTotal()"
+                required
+            >
+
+        </td>
+
+
+        <td>
+
+            <input
+                type="number"
+                name="precio[]"
+                value="0"
+                min="0"
+                step="0.01"
+                oninput="calcularTotal()"
+                required
+            >
+
+        </td>
+
+
+        <td class="subtotal-fila">
+            Bs 0.00
+        </td>
+
+
+        <td>
+
+            <button
+                type="button"
+                class="boton-eliminar"
+                onclick="eliminarFila(this)">
+
+                ✕
+
+            </button>
+
+        </td>
+
+    `;
+
+
+    tbody.appendChild(fila);
+
+    calcularTotal();
+
+}
+
+
+function cambiarProducto(select) {
+
+    const fila = select.closest("tr");
+
+    const opcion =
+        select.options[select.selectedIndex];
+
+    const precio =
+        opcion.dataset.precio || 0;
+
+
+    const inputPrecio =
+        fila.querySelector(
+            'input[name="precio[]"]'
+        );
+
+
+    inputPrecio.value = precio;
+
+    calcularTotal();
+
+}
+
+
+function eliminarFila(boton) {
+
+    const fila =
+        boton.closest("tr");
+
+    fila.remove();
+
+    calcularTotal();
+
+}
+
+
+function calcularTotal() {
+
+    const filas =
+        document.querySelectorAll(
+            "#productosBody tr"
+        );
+
+
+    let subtotalGeneral = 0;
+
+
+    filas.forEach(fila => {
+
+        const cantidad =
+            parseFloat(
+                fila.querySelector(
+                    'input[name="cantidad[]"]'
+                ).value
+            ) || 0;
+
+
+        const precio =
+            parseFloat(
+                fila.querySelector(
+                    'input[name="precio[]"]'
+                ).value
+            ) || 0;
+
+
+        const subtotal =
+            cantidad * precio;
+
+
+        fila.querySelector(
+            ".subtotal-fila"
+        ).textContent =
+            "Bs " + subtotal.toFixed(2);
+
+
+        subtotalGeneral += subtotal;
+
+    });
+
+
+    const descuento =
+        parseFloat(
+            document.getElementById("descuento").value
+        ) || 0;
+
+
+    let total =
+        subtotalGeneral - descuento;
+
+
+    if (total < 0) {
+        total = 0;
+    }
+
+
+    document.getElementById(
+        "subtotal"
+    ).textContent =
+        "Bs " + subtotalGeneral.toFixed(2);
+
+
+    document.getElementById(
+        "total"
+    ).textContent =
+        "Bs " + total.toFixed(2);
+
+}
+
+
+agregarFila();
+
+</script>
+
+
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+
+{% block titulo %}
+{{ cotizacion["numero"] }}
+{% endblock %}
+
+
+{% block contenido %}
+
+<div class="acciones-impresion">
+
+    <a
+        href="/historial"
+        class="boton boton-secundario">
+
+        ← Volver
+
+    </a>
+
+
+    <button
+        onclick="window.print()"
+        class="boton boton-principal">
+
+        🖨️ Imprimir
+
+    </button>
+
+</div>
+
+
+<section class="cotizacion-documento">
+
+
+    <div class="documento-header">
+
+        <div>
+
+            <h1>
+                COTIZA<span>PRO</span>
+            </h1>
+
+            <p>
+                Sistema de Cotizaciones
+            </p>
+
+        </div>
+
+
+        <div class="numero-cotizacion">
+
+            <strong>
+                {{ cotizacion["numero"] }}
+            </strong>
+
+            <span>
+                {{ cotizacion["fecha"] }}
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <hr>
+
+
+    <div class="datos-cliente">
+
+        <h2>
+            Cliente
+        </h2>
+
+        <p>
+            <strong>
+                {{ cotizacion["cliente_nombre"] }}
+            </strong>
+        </p>
+
+
+        {% if cotizacion["cliente_telefono"] %}
+
+        <p>
+            Teléfono:
+            {{ cotizacion["cliente_telefono"] }}
+        </p>
+
+        {% endif %}
+
+
+        {% if cotizacion["cliente_direccion"] %}
+
+        <p>
+            Dirección:
+            {{ cotizacion["cliente_direccion"] }}
+        </p>
+
+        {% endif %}
+
+
+        {% if cotizacion["cliente_email"] %}
+
+        <p>
+            Email:
+            {{ cotizacion["cliente_email"] }}
+        </p>
+
+        {% endif %}
+
+    </div>
+
+
+    <table class="tabla-cotizacion">
+
+        <thead>
+
+            <tr>
+
+                <th>#</th>
+
+                <th>
+                    Producto
+                </th>
+
+                <th>
+                    Cantidad
+                </th>
+
+                <th>
+                    Precio
+                </th>
+
+                <th>
+                    Subtotal
+                </th>
+
+            </tr>
+
+        </thead>
+
+
+        <tbody>
+
+            {% for detalle in detalles %}
+
+            <tr>
+
+                <td>
+                    {{ loop.index }}
+                </td>
+
+                <td>
+                    {{ detalle["producto_nombre"] }}
+                </td>
+
+                <td>
+                    {{ detalle["cantidad"] }}
+                </td>
+
+                <td>
+                    Bs {{ "%.2f"|format(detalle["precio"]) }}
+                </td>
+
+                <td>
+                    Bs {{ "%.2f"|format(detalle["subtotal"]) }}
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+
+    <div class="resumen-cotizacion">
+
+        <div>
+
+            <span>
+                Subtotal
+            </span>
+
+            <strong>
+                Bs {{ "%.2f"|format(cotizacion["subtotal"]) }}
+            </strong>
+
+        </div>
+
+
+        <div>
+
+            <span>
+                Descuento
+            </span>
+
+            <strong>
+                Bs {{ "%.2f"|format(cotizacion["descuento"]) }}
+            </strong>
+
+        </div>
+
+
+        <div class="total-documento">
+
+            <span>
+                TOTAL
+            </span>
+
+            <strong>
+                Bs {{ "%.2f"|format(cotizacion["total"]) }}
+            </strong>
+
+        </div>
+
+    </div>
+
+
+    {% if cotizacion["observaciones"] %}
+
+    <div class="observaciones-documento">
+
+        <h3>
+            Observaciones
+        </h3>
+
+        <p>
+            {{ cotizacion["observaciones"] }}
+        </p>
+
+    </div>
+
+    {% endif %}
+
+
+    <div class="firma">
+
+        <p>
+            Gracias por su preferencia.
+        </p>
+
+    </div>
+
+
+</section>
+
+{% endblock %}
