@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel principal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header>
+    <h1>SISTEMA DE GESTIÓN</h1>
+</header>
+
+<nav>
+    <a href="{{ url_for('inicio') }}">🏠 Inicio</a>
+    <a href="{{ url_for('nueva_cotizacion') }}">🧾 Nueva cotización</a>
+    <a href="{{ url_for('historial') }}">📋 Cotizaciones</a>
+    <a href="{{ url_for('ventas') }}">💰 Ventas</a>
+    <a href="{{ url_for('inventario') }}">📦 Inventario</a>
+    <a href="{{ url_for('clientes') }}">👥 Clientes</a>
+    <a href="{{ url_for('caja') }}">💵 Caja</a>
+    <a href="{{ url_for('reportes') }}">📊 Reportes</a>
+</nav>
+
+<main>
+
+    <h2>Panel principal</h2>
+
+    <div class="dashboard">
+
+        <div class="card">
+            <h3>🧾 Cotizaciones</h3>
+            <strong>{{ cotizaciones|length }}</strong>
+        </div>
+
+        <div class="card">
+            <h3>💰 Ventas</h3>
+            <strong>{{ ventas|length }}</strong>
+        </div>
+
+        <div class="card">
+            <h3>📋 Total cotizado</h3>
+            <strong>{{ "%.2f"|format(total_cotizado) }} Bs</strong>
+        </div>
+
+        <div class="card">
+            <h3>💵 Total vendido</h3>
+            <strong>{{ "%.2f"|format(total_vendido) }} Bs</strong>
+        </div>
+
+        <div class="card">
+            <h3>📅 Ventas de hoy</h3>
+            <strong>{{ "%.2f"|format(total_hoy) }} Bs</strong>
+        </div>
+
+        <div class="card">
+            <h3>⚠️ Stock bajo</h3>
+            <strong>{{ stock_bajo|length }}</strong>
+        </div>
+
+        <div class="card">
+            <h3>🔴 Agotados</h3>
+            <strong>{{ agotados|length }}</strong>
+        </div>
+
+    </div>
+
+    <section class="panel">
+
+        <h2>Últimas cotizaciones</h2>
+
+        <table>
+            <tr>
+                <th>Número</th>
+                <th>Total</th>
+                <th>Estado</th>
+            </tr>
+
+            {% for c in cotizaciones[:10] %}
+            <tr>
+                <td>{{ c.numero }}</td>
+                <td>{{ "%.2f"|format(c.total or 0) }} Bs</td>
+                <td>{{ c.estado }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="3">No hay cotizaciones.</td>
+            </tr>
+            {% endfor %}
+        </table>
+
+    </section>
+
+</main>
+
+</body>
+</html>
