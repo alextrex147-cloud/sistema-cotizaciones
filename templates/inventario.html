@@ -1,710 +1,808 @@
 <!DOCTYPE html>
+
 <html lang="es">
 
 <head>
 
-    <meta charset="UTF-8">
+```
+<meta charset="UTF-8">
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
 
-    <title>Inventario</title>
+<title>Inventario</title>
 
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='style.css') }}">
+<link rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}">
 
-    <style>
+<style>
 
-        .tabla-contenedor {
-            width: 100%;
-            overflow-x: auto;
-        }
+    .tabla-contenedor {
+        width: 100%;
+        overflow-x: auto;
+    }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 700px;
-        }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 850px;
+    }
 
-        th,
-        td {
-            padding: 10px;
-            border-bottom: 1px solid #ddd;
-            text-align: left;
-        }
+    th,
+    td {
+        padding: 10px;
+        border-bottom: 1px solid #ddd;
+        text-align: left;
+    }
 
-        th {
-            background: #f2f2f2;
-        }
+    th {
+        background: #f2f2f2;
+    }
 
-        .form-inventario {
-            display: grid;
-            gap: 12px;
-        }
+    .form-inventario {
+        display: grid;
+        gap: 12px;
+    }
 
-        .form-inventario input,
-        .form-inventario select {
-            width: 100%;
-            box-sizing: border-box;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            font-size: 16px;
-        }
+    .form-inventario input,
+    .form-inventario select {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 12px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 16px;
+    }
 
-        .grupo {
-            border: 1px solid #ddd;
-            padding: 15px;
-            border-radius: 10px;
-            background: #fafafa;
-        }
+    .grupo {
+        border: 1px solid #ddd;
+        padding: 15px;
+        border-radius: 10px;
+        background: #fafafa;
+    }
 
-        .badge {
-            display: inline-block;
-            padding: 5px 9px;
-            border-radius: 6px;
-            background: #eee;
-        }
+    .grupo h3 {
+        margin-top: 0;
+    }
 
-        .disponible {
-            color: green;
-            font-weight: bold;
-        }
+    .badge {
+        display: inline-block;
+        padding: 5px 9px;
+        border-radius: 6px;
+        background: #eee;
+    }
 
-        .agotada {
-            color: red;
-            font-weight: bold;
-        }
+    .disponible {
+        color: green;
+        font-weight: bold;
+    }
 
-        .entrada {
-            color: green;
-            font-weight: bold;
-        }
+    .agotada {
+        color: red;
+        font-weight: bold;
+    }
 
-        .salida {
-            color: red;
-            font-weight: bold;
-        }
+    .entrada {
+        color: green;
+        font-weight: bold;
+    }
 
-        .boton-limpiar {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 10px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 14px;
-        }
+    .salida {
+        color: red;
+        font-weight: bold;
+    }
 
-        .boton-limpiar:hover {
-            opacity: 0.85;
-        }
+    .boton-limpiar {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 14px;
+    }
 
-        .cabecera-movimientos {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 15px;
-            flex-wrap: wrap;
-            margin-bottom: 15px;
-        }
+    .boton-limpiar:hover {
+        opacity: 0.85;
+    }
 
-        .mensaje-vacio {
-            text-align: center;
-            padding: 20px;
-            color: #777;
-        }
+    .cabecera-movimientos {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        flex-wrap: wrap;
+        margin-bottom: 15px;
+    }
 
-        .boton-entrada {
-            background: #198754;
-            color: white;
-            border: none;
-            padding: 12px 18px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 15px;
-        }
+    .mensaje-vacio {
+        text-align: center;
+        padding: 20px;
+        color: #777;
+    }
 
-        .boton-entrada:hover {
-            opacity: 0.85;
-        }
+    .boton-entrada {
+        background: #198754;
+        color: white;
+        border: none;
+        padding: 12px 18px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 15px;
+    }
 
-        .boton-deshabilitado {
-            background: #999;
-            color: white;
-            border: none;
-            padding: 12px 18px;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 15px;
-            cursor: not-allowed;
-        }
+    .boton-entrada:hover {
+        opacity: 0.85;
+    }
 
-        .advertencia {
-            background: #fff3cd;
-            border: 1px solid #ffe69c;
-            color: #664d03;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-        }
+    .boton-entrada:disabled {
+        background: #999;
+        cursor: not-allowed;
+    }
 
-        .boton-eliminar {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 7px 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-        }
+    .advertencia {
+        background: #fff3cd;
+        border: 1px solid #ffe69c;
+        color: #664d03;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
 
-        .boton-eliminar:hover {
-            opacity: 0.85;
-        }
+    .producto-nombre {
+        font-weight: bold;
+    }
 
-    </style>
+</style>
+```
 
 </head>
 
-
 <body>
-
 
 <header>
 
-    <h1>INVENTARIO</h1>
+```
+<h1>INVENTARIO</h1>
+```
 
 </header>
 
-
 <nav>
 
-    <a href="{{ url_for('inicio') }}">
-        🏠 Inicio
-    </a>
+```
+<a href="{{ url_for('inicio') }}">
+    🏠 Inicio
+</a>
 
-    <a href="{{ url_for('nueva_cotizacion') }}">
-        🧾 Nueva cotización
-    </a>
+<a href="{{ url_for('nueva_cotizacion') }}">
+    🧾 Nueva cotización
+</a>
 
-    <a href="{{ url_for('historial') }}">
-        📋 Cotizaciones
-    </a>
+<a href="{{ url_for('historial') }}">
+    📋 Cotizaciones
+</a>
 
-    <a href="{{ url_for('ventas') }}">
-        💰 Ventas
-    </a>
+<a href="{{ url_for('ventas') }}">
+    💰 Ventas
+</a>
 
-    <a href="{{ url_for('inventario') }}">
-        📦 Inventario
-    </a>
+<a href="{{ url_for('inventario') }}">
+    📦 Inventario
+</a>
 
-    <a href="{{ url_for('caja') }}">
-        💵 Caja
-    </a>
+<a href="{{ url_for('caja') }}">
+    💵 Caja
+</a>
 
-    <a href="{{ url_for('reportes') }}">
-        📊 Reportes
-    </a>
+<a href="{{ url_for('reportes') }}">
+    📊 Reportes
+</a>
+```
 
 </nav>
 
-
 <main>
 
+```
+<!-- ===================================================== -->
+<!-- EXISTENCIAS -->
+<!-- ===================================================== -->
 
-    <!-- ===================================================== -->
-    <!-- EXISTENCIAS -->
-    <!-- ===================================================== -->
+<section class="panel">
 
-    <section class="panel">
-
-        <h2>
-            📦 EXISTENCIAS
-        </h2>
-
-
-        <div class="tabla-contenedor">
-
-            <table>
-
-                <thead>
-
-                    <tr>
-
-                        <th>
-                            Presentación
-                        </th>
-
-                        <th>
-                            N.º
-                        </th>
-
-                        <th>
-                            Inicial
-                        </th>
-
-                        <th>
-                            Actual
-                        </th>
-
-                        <th>
-                            Unidad
-                        </th>
-
-                        <th>
-                            Estado
-                        </th>
-
-                    </tr>
-
-                </thead>
+    <h2>
+        📦 EXISTENCIAS
+    </h2>
 
 
-                <tbody>
+    <div class="tabla-contenedor">
 
-                    {% for e in existencias %}
+        <table>
 
-                    <tr>
+            <thead>
 
-                        <td>
-                            <strong>
-                                {{ e.tipo_presentacion }}
-                            </strong>
-                        </td>
+                <tr>
+
+                    <th>
+                        Producto
+                    </th>
+
+                    <th>
+                        Presentación
+                    </th>
+
+                    <th>
+                        N.º
+                    </th>
+
+                    <th>
+                        Inicial
+                    </th>
+
+                    <th>
+                        Actual
+                    </th>
+
+                    <th>
+                        Unidad
+                    </th>
+
+                    <th>
+                        Estado
+                    </th>
+
+                </tr>
+
+            </thead>
 
 
-                        <td>
+            <tbody>
 
-                            <strong>
-                                #{{ e.numero }}
-                            </strong>
+                {% for e in existencias %}
 
-                        </td>
+                <tr>
 
 
-                        <td>
+                    <td>
+
+                        <strong class="producto-nombre">
+
+                            {{ e.producto_nombre or "Producto desconocido" }}
+
+                        </strong>
+
+                    </td>
+
+
+                    <td>
+
+                        <strong>
+
+                            {{ e.tipo_presentacion }}
+
+                        </strong>
+
+                    </td>
+
+
+                    <td>
+
+                        <strong>
+
+                            #{{ e.numero }}
+
+                        </strong>
+
+                    </td>
+
+
+                    <td>
+
+                        {{ "%.2f"|format(
+                            e.cantidad_inicial or 0
+                        ) }}
+
+                    </td>
+
+
+                    <td>
+
+                        <strong>
 
                             {{ "%.2f"|format(
-                                e.cantidad_inicial or 0
+                                e.cantidad_actual or 0
                             ) }}
 
-                        </td>
+                        </strong>
+
+                    </td>
 
 
-                        <td>
+                    <td>
 
-                            <strong>
+                        <span class="badge">
 
-                                {{ "%.2f"|format(
-                                    e.cantidad_actual or 0
-                                ) }}
+                            {% if e.unidad_contenido == "metros" %}
 
-                            </strong>
+                                METROS
 
-                        </td>
+                            {% elif e.unidad_contenido == "kilos" %}
 
+                                KILOS
 
-                        <td>
+                            {% elif e.unidad_contenido == "unidad" %}
 
-                            <span class="badge">
-
-                                {% if e.unidad_contenido == "metros" %}
-
-                                    METROS
-
-                                {% elif e.unidad_contenido == "kilos" %}
-
-                                    KILOS
-
-                                {% elif e.unidad_contenido == "unidad" %}
-
-                                    UNIDAD
-
-                                {% else %}
-
-                                    {{ e.unidad_contenido }}
-
-                                {% endif %}
-
-                            </span>
-
-                        </td>
-
-
-                        <td>
-
-                            {% if e.estado == "agotada"
-                                  or (e.cantidad_actual or 0) <= 0 %}
-
-                                <span class="agotada">
-
-                                    AGOTADA
-
-                                </span>
+                                UNIDAD
 
                             {% else %}
 
-                                <span class="disponible">
-
-                                    DISPONIBLE
-
-                                </span>
+                                {{ e.unidad_contenido }}
 
                             {% endif %}
 
-                        </td>
+                        </span>
 
-                    </tr>
+                    </td>
 
 
-                    {% else %}
+                    <td>
 
-                    <tr>
+                        {% if e.estado == "agotada"
+                              or (e.cantidad_actual or 0) <= 0 %}
 
-                        <td colspan="6"
-                            class="mensaje-vacio">
+                            <span class="agotada">
 
-                            No hay existencias registradas.
+                                AGOTADA
 
-                        </td>
+                            </span>
 
-                    </tr>
+                        {% else %}
 
-                    {% endfor %}
+                            <span class="disponible">
 
-                </tbody>
+                                DISPONIBLE
 
-            </table>
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+
+                </tr>
+
+
+                {% else %}
+
+                <tr>
+
+                    <td colspan="7"
+                        class="mensaje-vacio">
+
+                        No hay existencias registradas.
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+
+
+<!-- ===================================================== -->
+<!-- AGREGAR EXISTENCIA -->
+<!-- ===================================================== -->
+
+<section class="panel">
+
+    <h2>
+        ➕ AGREGAR EXISTENCIA
+    </h2>
+
+
+    {% if not productos %}
+
+        <div class="advertencia">
+
+            ⚠️ No hay productos registrados.
+
+            <br><br>
+
+            Primero debes ir a
+            <strong>PRODUCTOS</strong>
+            y crear un producto.
 
         </div>
 
-    </section>
+    {% endif %}
 
 
-
-    <!-- ===================================================== -->
-    <!-- AGREGAR EXISTENCIA -->
-    <!-- ===================================================== -->
-
-    <section class="panel">
-
-        <h2>
-            ➕ AGREGAR EXISTENCIA
-        </h2>
+    <form method="POST"
+          action="{{ url_for('entrada_inventario') }}"
+          class="form-inventario">
 
 
-        <form method="POST"
-              action="{{ url_for('entrada_inventario') }}"
-              class="form-inventario">
+        <!-- ================================================= -->
+        <!-- PRODUCTO -->
+        <!-- ================================================= -->
 
+        <div class="grupo">
 
-            <div class="grupo">
-
-                <h3>
-                    Presentación
-                </h3>
-
-                <input
-                    name="presentacion"
-                    type="text"
-                    placeholder="Ejemplo: Bobina, Caja, Saco, Paquete, Suelto"
-                    required>
-
-            </div>
-
-
-            <label>
-
-                <strong>
-                    Cantidad de presentaciones
-                </strong>
-
-            </label>
-
-
-            <input
-                name="cantidad_contenedores"
-                type="number"
-                min="1"
-                step="1"
-                placeholder="Ejemplo: 3"
-                required>
-
-
-            <label>
-
-                <strong>
-                    Contenido de cada presentación
-                </strong>
-
-            </label>
-
-
-            <input
-                name="cantidad_por_contenedor"
-                type="number"
-                min="0.01"
-                step="0.01"
-                placeholder="Ejemplo: 100"
-                required>
-
-
-            <label>
-
-                <strong>
-                    Unidad de contenido
-                </strong>
-
-            </label>
+            <h3>
+                Producto
+            </h3>
 
 
             <select
-                name="unidad"
-                required>
+                name="producto_id"
+                required
+                {% if not productos %}disabled{% endif %}>
 
                 <option value="">
-                    Seleccione la unidad
+                    Seleccione el producto
                 </option>
 
-                <option value="metros">
-                    METROS
-                </option>
 
-                <option value="kilos">
-                    KILOS
-                </option>
+                {% for p in productos %}
 
-                <option value="unidad">
-                    UNIDAD
-                </option>
+                    <option value="{{ p.id }}">
+
+                        {{ p.nombre }}
+
+                    </option>
+
+                {% endfor %}
+
 
             </select>
+
+        </div>
+
+
+
+        <!-- ================================================= -->
+        <!-- PRESENTACION -->
+        <!-- ================================================= -->
+
+        <div class="grupo">
+
+            <h3>
+                Presentación
+            </h3>
+
+
+            <input
+                name="presentacion"
+                type="text"
+                placeholder="Ejemplo: Bobina, Caja, Saco, Paquete, Suelto"
+                required
+                {% if not productos %}disabled{% endif %}>
+
+        </div>
+
+
+
+        <!-- ================================================= -->
+        <!-- CANTIDAD DE PRESENTACIONES -->
+        <!-- ================================================= -->
+
+        <label>
+
+            <strong>
+                Cantidad de presentaciones
+            </strong>
+
+        </label>
+
+
+        <input
+            name="cantidad_contenedores"
+            type="number"
+            min="1"
+            step="1"
+            placeholder="Ejemplo: 3"
+            required
+            {% if not productos %}disabled{% endif %}>
+
+
+
+        <!-- ================================================= -->
+        <!-- CONTENIDO -->
+        <!-- ================================================= -->
+
+        <label>
+
+            <strong>
+                Contenido de cada presentación
+            </strong>
+
+        </label>
+
+
+        <input
+            name="cantidad_por_contenedor"
+            type="number"
+            min="0.01"
+            step="0.01"
+            placeholder="Ejemplo: 100"
+            required
+            {% if not productos %}disabled{% endif %}>
+
+
+
+        <!-- ================================================= -->
+        <!-- UNIDAD -->
+        <!-- ================================================= -->
+
+        <label>
+
+            <strong>
+                Unidad de contenido
+            </strong>
+
+        </label>
+
+
+        <select
+            name="unidad"
+            required
+            {% if not productos %}disabled{% endif %}>
+
+            <option value="">
+                Seleccione la unidad
+            </option>
+
+            <option value="metros">
+                METROS
+            </option>
+
+            <option value="kilos">
+                KILOS
+            </option>
+
+            <option value="unidad">
+                UNIDAD
+            </option>
+
+        </select>
+
+
+
+        <!-- ================================================= -->
+        <!-- BOTON -->
+        <!-- ================================================= -->
+
+        <button
+            type="submit"
+            class="boton-entrada"
+            {% if not productos %}disabled{% endif %}>
+
+            📥 REGISTRAR ENTRADA
+
+        </button>
+
+
+    </form>
+
+</section>
+
+
+
+<!-- ===================================================== -->
+<!-- MOVIMIENTOS -->
+<!-- ===================================================== -->
+
+<section class="panel">
+
+
+    <div class="cabecera-movimientos">
+
+
+        <h2>
+            📋 MOVIMIENTOS
+        </h2>
+
+
+        <form
+            method="POST"
+            action="{{ url_for('limpiar_movimientos') }}"
+            onsubmit="return confirm('⚠️ ¿ESTÁS SEGURO? Se eliminarán TODOS los movimientos del inventario. Las existencias NO se eliminarán.');">
 
 
             <button
                 type="submit"
-                class="boton-entrada">
+                class="boton-limpiar">
 
-                📥 REGISTRAR ENTRADA
+                🧹 LIMPIAR MOVIMIENTOS
 
             </button>
 
 
         </form>
 
-    </section>
 
+    </div>
 
 
-    <!-- ===================================================== -->
-    <!-- MOVIMIENTOS -->
-    <!-- ===================================================== -->
 
-    <section class="panel">
+    <div class="tabla-contenedor">
 
 
-        <div class="cabecera-movimientos">
+        <table>
 
 
-            <h2>
-                📋 MOVIMIENTOS
-            </h2>
+            <thead>
 
+                <tr>
 
-            <!-- BOTÓN LIMPIAR -->
+                    <th>
+                        Producto
+                    </th>
 
-            <form
-                method="POST"
-                action="{{ url_for('limpiar_movimientos') }}"
-                onsubmit="return confirm('⚠️ ¿ESTÁS SEGURO? Se eliminarán TODOS los movimientos del inventario. Las existencias NO se eliminarán.');">
+                    <th>
+                        Existencia
+                    </th>
 
+                    <th>
+                        Tipo
+                    </th>
 
-                <button
-                    type="submit"
-                    class="boton-limpiar">
+                    <th>
+                        Cantidad
+                    </th>
 
-                    🧹 LIMPIAR MOVIMIENTOS
+                    <th>
+                        Venta
+                    </th>
 
-                </button>
+                    <th>
+                        Descripción
+                    </th>
 
+                    <th>
+                        Fecha
+                    </th>
 
-            </form>
+                </tr>
 
+            </thead>
 
-        </div>
 
 
+            <tbody>
 
-        <div class="tabla-contenedor">
 
+                {% for m in movimientos %}
 
-            <table>
 
+                <tr>
 
-                <thead>
 
-                    <tr>
+                    <td>
 
-                        <th>
-                            Existencia
-                        </th>
+                        {{ m.producto_nombre or "-" }}
 
-                        <th>
-                            Tipo
-                        </th>
+                    </td>
 
-                        <th>
-                            Cantidad
-                        </th>
 
-                        <th>
-                            Venta
-                        </th>
+                    <td>
 
-                        <th>
-                            Descripción
-                        </th>
+                        {% if m.existencia_numero %}
 
-                        <th>
-                            Fecha
-                        </th>
+                            #{{ m.existencia_numero }}
 
-                    </tr>
+                        {% else %}
 
-                </thead>
+                            -
 
+                        {% endif %}
 
+                    </td>
 
-                <tbody>
 
+                    <td>
 
-                    {% for m in movimientos %}
+                        {% if m.tipo == "ENTRADA" %}
 
+                            <span class="entrada">
 
-                    <tr>
+                                ENTRADA
 
+                            </span>
 
-                        <td>
+                        {% elif m.tipo == "SALIDA" %}
 
-                            {% if m.existencia_numero %}
+                            <span class="salida">
 
-                                #{{ m.existencia_numero }}
+                                SALIDA
 
-                            {% else %}
+                            </span>
 
-                                -
+                        {% else %}
 
-                            {% endif %}
+                            {{ m.tipo }}
 
-                        </td>
+                        {% endif %}
 
+                    </td>
 
 
-                        <td>
+                    <td>
 
+                        {{ "%.2f"|format(
+                            m.cantidad or 0
+                        ) }}
 
-                            {% if m.tipo == "ENTRADA" %}
+                    </td>
 
-                                <span class="entrada">
 
-                                    ENTRADA
+                    <td>
 
-                                </span>
+                        {{ m.numero_venta or "-" }}
 
+                    </td>
 
-                            {% elif m.tipo == "SALIDA" %}
 
-                                <span class="salida">
+                    <td>
 
-                                    SALIDA
+                        {{ m.descripcion or "-" }}
 
-                                </span>
+                    </td>
 
 
-                            {% else %}
+                    <td>
 
-                                {{ m.tipo }}
+                        {{ m.fecha or "-" }}
 
-                            {% endif %}
+                    </td>
 
 
-                        </td>
+                </tr>
 
 
+                {% else %}
 
-                        <td>
 
-                            {{ "%.2f"|format(
-                                m.cantidad or 0
-                            ) }}
+                <tr>
 
-                        </td>
+                    <td
+                        colspan="7"
+                        class="mensaje-vacio">
 
+                        No hay movimientos registrados.
 
+                    </td>
 
-                        <td>
+                </tr>
 
-                            {{ m.numero_venta or "-" }}
 
-                        </td>
+                {% endfor %}
 
 
+            </tbody>
 
-                        <td>
 
-                            {{ m.descripcion or "-" }}
+        </table>
 
-                        </td>
 
+    </div>
 
 
-                        <td>
-
-                            {{ m.fecha or "-" }}
-
-                        </td>
-
-
-                    </tr>
-
-
-                    {% else %}
-
-
-                    <tr>
-
-                        <td
-                            colspan="6"
-                            class="mensaje-vacio">
-
-                            No hay movimientos registrados.
-
-                        </td>
-
-                    </tr>
-
-
-                    {% endfor %}
-
-
-                </tbody>
-
-
-            </table>
-
-
-        </div>
-
-
-    </section>
-
+</section>
+```
 
 </main>
-
 
 </body>
 
