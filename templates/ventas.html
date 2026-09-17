@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Ventas</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body>
+
+<header>
+<h1>VENTAS</h1>
+</header>
+
+<nav>
+
+<a href="{{ url_for('inicio') }}">🏠 Inicio</a>
+<a href="{{ url_for('nueva_cotizacion') }}">🧾 Nueva</a>
+<a href="{{ url_for('historial') }}">📋 Cotizaciones</a>
+
+</nav>
+
+<main>
+
+<section class="dashboard">
+
+<div class="card">
+
+<h3>Total vendido</h3>
+
+<strong>{{ "%.2f"|format(total) }} Bs</strong>
+
+</div>
+
+<div class="card">
+
+<h3>Cantidad de ventas</h3>
+
+<strong>{{ ventas|length }}</strong>
+
+</div>
+
+</div>
+
+</section>
+
+<section class="panel">
+
+<table>
+
+<tr>
+
+<th>Número</th>
+<th>Fecha</th>
+<th>Total</th>
+<th>Forma de pago</th>
+
+</tr>
+
+{% for v in ventas %}
+
+<tr>
+
+<td>{{ v.numero }}</td>
+
+<td>{{ v.fecha }}</td>
+
+<td>{{ "%.2f"|format(v.total or 0) }} Bs</td>
+
+<td>{{ v.forma_pago }}</td>
+
+</tr>
+
+{% else %}
+
+<tr>
+<td colspan="4">No hay ventas.</td>
+</tr>
+
+{% endfor %}
+
+</table>
+
+</section>
+
+</main>
+
+</body>
+
+</html>
