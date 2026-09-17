@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<title>Productos</title>
+
+<link rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}">
+
+<style>
+
+.form-inventario {
+    display: grid;
+    gap: 12px;
+    margin-top: 15px;
+}
+
+.form-inventario input,
+.form-inventario select,
+.form-inventario textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+.grupo-inventario {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 15px;
+    margin-top: 10px;
+    background: #fafafa;
+}
+
+.grupo-inventario h3 {
+    margin-top: 0;
+}
+
+.ayuda {
+    font-size: 13px;
+    color: #666;
+}
+
+.tabla-contenedor {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+}
+
+th {
+    background: #f2f2f2;
+}
+
+.badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: #eee;
+    font-size: 13px;
+}
+
+.danger {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<h1>PRODUCTOS</h1>
+
+</header>
+
+
+<nav>
+
+<a href="{{ url_for('inicio') }}">
+🏠 Inicio
+</a>
+
+<a href="{{ url_for('nueva_cotizacion') }}">
+🧾 Nueva cotización
+</a>
+
+<a href="{{ url_for('inventario') }}">
+📦 Inventario
+</a>
+
+<a href="{{ url_for('historial') }}">
+📋 Cotizaciones
+</a>
+
+<a href="{{ url_for('ventas') }}">
+💰 Ventas
+</a>
+
+</nav>
+
+
+<main>
+
+
+<!-- =====================================================
+     AGREGAR PRODUCTO
+===================================================== -->
+
+<section class="panel">
+
+<h2>➕ AGREGAR PRODUCTO</h2>
+
+<form
+    method="POST"
+    action="{{ url_for('agregar_producto') }}"
+    class="form-inventario"
+>
+
+
+<label>
+
+<strong>
+Nombre del producto
+</strong>
+
+</label>
+
+<input
+    name="nombre"
+    placeholder="Ejemplo: Calamina trapezoidal"
+    required
+>
+
+
+<label>
+
+<strong>
+Descripción
+</strong>
+
+</label>
+
+<input
+    name="descripcion"
+    placeholder="Descripción del producto"
+>
+
+
+<label>
+
+<strong>
+Tipo de venta
+</strong>
+
+</label>
+
+<select
+    name="tipo_venta"
+    id="tipo"
+    required
+>
+
+<option value="unidad">
+UNIDAD
+</option>
+
+<option value="metro">
+METRO
+</option>
+
+<option value="kilo">
+KILO
+</option>
+
+</select>
+
+
+<label>
+
+<strong>
+Precio
+</strong>
+
+</label>
+
+<input
+    name="precio"
+    type="number"
+    step="0.01"
+    min="0"
+    placeholder="Ejemplo: 25"
+    required
+>
+
+
+<label>
+
+<strong>
+Stock mínimo
+</strong>
+
+</label>
+
+<input
+    name="stock_minimo"
+    type="number"
+    step="0.01"
+    min="0"
+    placeholder="Ejemplo: 100"
+>
+
+
+<!-- =====================================================
+     INVENTARIO INICIAL
+===================================================== -->
+
+<div class="grupo-inventario">
+
+<h3>
+📦 INVENTARIO INICIAL
+</h3>
+
+<p class="ayuda">
+
+Aquí registras cómo tienes guardado el producto.
+
+La presentación puede escribirse libremente.
+
+Ejemplos:
+
+Bobina, Caja, Saco, Paquete o Suelto.
+
+</p>
+
+
+<label>
+
+<strong>
+Presentación
+</strong>
+
+</label>
+
+<input
+    name="presentacion"
+    type="text"
+    placeholder="Ejemplo: Bobina"
+    required
+>
+
+
+<label>
+
+<strong>
+Cantidad de presentaciones
+</strong>
+
+</label>
+
+<input
+    name="cantidad_contenedores"
+    type="number"
+    min="1"
+    step="1"
+    placeholder="Ejemplo: 3"
+    required
+>
+
+
+<label>
+
+<strong>
+Contenido de cada presentación
+</strong>
+
+</label>
+
+<input
+    name="cantidad_por_contenedor"
+    type="number"
+    min="0.01"
+    step="0.01"
+    placeholder="Ejemplo: 1000"
+    required
+>
+
+
+<label>
+
+<strong>
+Unidad de contenido
+</strong>
+
+</label>
+
+<select
+    name="unidad"
+    required
+>
+
+<option value="">
+Seleccione la unidad
+</option>
+
+<option value="metros">
+METROS
+</option>
+
+<option value="kilos">
+KILOS
+</option>
+
+<option value="unidad">
+UNIDAD
+</option>
+
+</select>
+
+
+<p class="ayuda">
+
+<strong>
+Ejemplo 1:
+</strong>
+
+3 Bobinas × 1000 METROS
+
+<br>
+
+→ Bobina #1 = 1000 METROS
+
+<br>
+
+→ Bobina #2 = 1000 METROS
+
+<br>
+
+→ Bobina #3 = 1000 METROS
+
+<br><br>
+
+<strong>
+Ejemplo 2:
+</strong>
+
+5 Cajas × 50 KILOS
+
+<br>
+
+→ Caja #1 = 50 KILOS
+
+<br>
+
+→ Caja #2 = 50 KILOS
+
+<br>
+
+→ Caja #3 = 50 KILOS
+
+<br>
+
+→ Caja #4 = 50 KILOS
+
+<br>
+
+→ Caja #5 = 50 KILOS
+
+<br><br>
+
+<strong>
+Ejemplo 3:
+</strong>
+
+100 unidades sueltas
+
+</p>
+
+</div>
+
+
+<button
+    type="submit"
+>
+
+💾 GUARDAR PRODUCTO
+
+</button>
+
+</form>
+
+</section>
+
+
+<!-- =====================================================
+     LISTA DE PRODUCTOS
+===================================================== -->
+
+<section class="panel">
+
+<h2>
+📋 PRODUCTOS REGISTRADOS
+</h2>
+
+<div class="tabla-contenedor">
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>
+Producto
+</th>
+
+<th>
+Tipo de venta
+</th>
+
+<th>
+Stock total
+</th>
+
+<th>
+Stock mínimo
+</th>
+
+<th>
+Precio
+</th>
+
+<th>
+Acción
+</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for p in productos %}
+
+<tr>
+
+<td>
+
+<strong>
+{{ p.nombre }}
+</strong>
+
+{% if p.descripcion %}
+
+<br>
+
+<small>
+{{ p.descripcion }}
+</small>
+
+{% endif %}
+
+</td>
+
+
+<td>
+
+<span class="badge">
+
+{% if p.tipo_venta == "metro" %}
+
+METRO
+
+{% elif p.tipo_venta == "kilo" %}
+
+KILO
+
+{% else %}
+
+UNIDAD
+
+{% endif %}
+
+</span>
+
+</td>
+
+
+<td>
+
+{{ "%.2f"|format(p.stock or 0) }}
+
+</td>
+
+
+<td>
+
+{{ "%.2f"|format(p.stock_minimo or 0) }}
+
+</td>
+
+
+<td>
+
+{{ "%.2f"|format(p.precio or 0) }}
+
+Bs
+
+</td>
+
+
+<td>
+
+<form
+    method="POST"
+    action="{{ url_for('eliminar_producto', id=p.id) }}"
+    onsubmit="return confirm('¿Estás seguro de eliminar este producto?');"
+>
+
+<button
+    type="submit"
+    class="danger"
+>
+
+🗑️ Eliminar
+
+</button>
+
+</form>
+
+</td>
+
+</tr>
+
+{% else %}
+
+<tr>
+
+<td colspan="6">
+
+No hay productos registrados.
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+</section>
+
+
+</main>
+
+</body>
+
+</html>
