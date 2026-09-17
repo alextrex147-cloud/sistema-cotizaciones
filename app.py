@@ -1118,6 +1118,93 @@ def eliminar_existencia(id):
 
 
 # ============================================================
+# ELIMINAR UN MOVIMIENTO
+# ============================================================
+
+@app.route(
+    "/eliminar-movimiento/<int:id>",
+    methods=["POST"]
+)
+def eliminar_movimiento(id):
+
+    try:
+
+        movimiento = (
+            supabase
+            .table("movimientos_existencias")
+            .select("*")
+            .eq("id", id)
+            .limit(1)
+            .execute()
+            .data or []
+        )
+
+        if not movimiento:
+
+            raise Exception(
+                "El movimiento no existe."
+            )
+
+        (
+            supabase
+            .table("movimientos_existencias")
+            .delete()
+            .eq(
+                "id",
+                id
+            )
+            .execute()
+        )
+
+        return redirect(
+            url_for(
+                "inventario"
+            )
+        )
+
+    except Exception as e:
+
+        return (
+            f"Error al eliminar movimiento: {e}",
+            500
+        )
+
+
+# ============================================================
+# LIMPIAR TODOS LOS MOVIMIENTOS
+# ============================================================
+
+@app.route(
+    "/limpiar-movimientos",
+    methods=["POST"]
+)
+def limpiar_movimientos():
+
+    try:
+
+        (
+            supabase
+            .table("movimientos_existencias")
+            .delete()
+            .neq("id", 0)
+            .execute()
+        )
+
+        return redirect(
+            url_for(
+                "inventario"
+            )
+        )
+
+    except Exception as e:
+
+        return (
+            f"Error al limpiar movimientos: {e}",
+            500
+        )
+
+
+# ============================================================
 # NUEVA COTIZACIÓN
 # ============================================================
 
