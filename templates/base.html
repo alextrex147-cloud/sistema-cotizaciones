@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>{% block titulo %}CotizaPro{% endblock %}</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body>
+
+<header class="header">
+
+    <div class="logo">
+        COTIZA<span>PRO</span>
+    </div>
+
+    <nav>
+
+        <a href="/">Inicio</a>
+
+        <a href="/clientes">Clientes</a>
+
+        <a href="/productos">Productos</a>
+
+        <a href="/nueva-cotizacion">Nueva Cotización</a>
+
+        <a href="/historial">Historial</a>
+
+    </nav>
+
+</header>
+
+
+<main class="contenedor">
+
+    {% block contenido %}
+    {% endblock %}
+
+</main>
+
+
+<footer>
+
+    <p>
+        Sistema de Cotizaciones © 2026
+    </p>
+
+</footer>
+
+</body>
+
+</html>
