@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Caja</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body>
+
+<header>
+<h1>CAJA</h1>
+</header>
+
+<nav>
+<a href="{{ url_for('inicio') }}">🏠 Inicio</a>
+<a href="{{ url_for('ventas') }}">💰 Ventas</a>
+</nav>
+
+<main>
+
+<div class="card">
+
+<h2>Ingresos registrados</h2>
+
+<strong>{{ "%.2f"|format(total) }} Bs</strong>
+
+</div>
+
+<section class="panel">
+
+<table>
+
+<tr>
+<th>Fecha</th>
+<th>Tipo</th>
+<th>Monto</th>
+<th>Forma de pago</th>
+<th>Descripción</th>
+</tr>
+
+{% for m in movimientos %}
+
+<tr>
+
+<td>{{ m.fecha }}</td>
+<td>{{ m.tipo }}</td>
+<td>{{ "%.2f"|format(m.monto or 0) }} Bs</td>
+<td>{{ m.forma_pago }}</td>
+<td>{{ m.descripcion }}</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+</section>
+
+</main>
+
+</body>
+
+</html>
