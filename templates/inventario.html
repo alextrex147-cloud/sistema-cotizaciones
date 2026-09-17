@@ -1,105 +1,171 @@
-```html
 <!DOCTYPE html>
 <html lang="es">
 
 <head>
 
-<meta charset="UTF-8">
+    <meta charset="UTF-8">
 
-<meta name="viewport"
-      content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
 
-<title>Inventario</title>
+    <title>Inventario</title>
 
-<link rel="stylesheet"
-      href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
 
-<style>
+    <style>
 
-.tabla-contenedor {
-    width: 100%;
-    overflow-x: auto;
-}
+        .tabla-contenedor {
+            width: 100%;
+            overflow-x: auto;
+        }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 700px;
+        }
 
-th,
-td {
-    padding: 10px;
-    border-bottom: 1px solid #ddd;
-    text-align: left;
-}
+        th,
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
 
-th {
-    background: #f2f2f2;
-}
+        th {
+            background: #f2f2f2;
+        }
 
-.form-inventario {
-    display: grid;
-    gap: 12px;
-}
+        .form-inventario {
+            display: grid;
+            gap: 12px;
+        }
 
-.form-inventario input,
-.form-inventario select {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 12px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    font-size: 16px;
-}
+        .form-inventario input,
+        .form-inventario select {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+        }
 
-.grupo {
-    border: 1px solid #ddd;
-    padding: 15px;
-    border-radius: 10px;
-    background: #fafafa;
-}
+        .grupo {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 10px;
+            background: #fafafa;
+        }
 
-.badge {
-    display: inline-block;
-    padding: 5px 9px;
-    border-radius: 6px;
-    background: #eee;
-}
+        .badge {
+            display: inline-block;
+            padding: 5px 9px;
+            border-radius: 6px;
+            background: #eee;
+        }
 
-.disponible {
-    color: green;
-    font-weight: bold;
-}
+        .disponible {
+            color: green;
+            font-weight: bold;
+        }
 
-.agotada {
-    color: red;
-    font-weight: bold;
-}
+        .agotada {
+            color: red;
+            font-weight: bold;
+        }
 
-.entrada {
-    color: green;
-    font-weight: bold;
-}
+        .entrada {
+            color: green;
+            font-weight: bold;
+        }
 
-.salida {
-    color: red;
-    font-weight: bold;
-}
+        .salida {
+            color: red;
+            font-weight: bold;
+        }
 
-.btn-eliminar {
-    background: #dc3545;
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 7px;
-    cursor: pointer;
-}
+        .boton-limpiar {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+        }
 
-.btn-eliminar:hover {
-    opacity: 0.85;
-}
+        .boton-limpiar:hover {
+            opacity: 0.85;
+        }
 
-</style>
+        .cabecera-movimientos {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .mensaje-vacio {
+            text-align: center;
+            padding: 20px;
+            color: #777;
+        }
+
+        .boton-entrada {
+            background: #198754;
+            color: white;
+            border: none;
+            padding: 12px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        .boton-entrada:hover {
+            opacity: 0.85;
+        }
+
+        .boton-deshabilitado {
+            background: #999;
+            color: white;
+            border: none;
+            padding: 12px 18px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 15px;
+            cursor: not-allowed;
+        }
+
+        .advertencia {
+            background: #fff3cd;
+            border: 1px solid #ffe69c;
+            color: #664d03;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .boton-eliminar {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 7px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .boton-eliminar:hover {
+            opacity: 0.85;
+        }
+
+    </style>
 
 </head>
 
@@ -109,40 +175,40 @@ th {
 
 <header>
 
-<h1>INVENTARIO</h1>
+    <h1>INVENTARIO</h1>
 
 </header>
 
 
 <nav>
 
-<a href="{{ url_for('inicio') }}">
-🏠 Inicio
-</a>
+    <a href="{{ url_for('inicio') }}">
+        🏠 Inicio
+    </a>
 
-<a href="{{ url_for('nueva_cotizacion') }}">
-🧾 Nueva cotización
-</a>
+    <a href="{{ url_for('nueva_cotizacion') }}">
+        🧾 Nueva cotización
+    </a>
 
-<a href="{{ url_for('historial') }}">
-📋 Cotizaciones
-</a>
+    <a href="{{ url_for('historial') }}">
+        📋 Cotizaciones
+    </a>
 
-<a href="{{ url_for('ventas') }}">
-💰 Ventas
-</a>
+    <a href="{{ url_for('ventas') }}">
+        💰 Ventas
+    </a>
 
-<a href="{{ url_for('inventario') }}">
-📦 Inventario
-</a>
+    <a href="{{ url_for('inventario') }}">
+        📦 Inventario
+    </a>
 
-<a href="{{ url_for('caja') }}">
-💵 Caja
-</a>
+    <a href="{{ url_for('caja') }}">
+        💵 Caja
+    </a>
 
-<a href="{{ url_for('reportes') }}">
-📊 Reportes
-</a>
+    <a href="{{ url_for('reportes') }}">
+        📊 Reportes
+    </a>
 
 </nav>
 
@@ -150,332 +216,491 @@ th {
 <main>
 
 
-<section class="panel">
+    <!-- ===================================================== -->
+    <!-- EXISTENCIAS -->
+    <!-- ===================================================== -->
 
-<h2>📦 EXISTENCIAS</h2>
+    <section class="panel">
 
+        <h2>
+            📦 EXISTENCIAS
+        </h2>
 
-<div class="tabla-contenedor">
 
-<table>
+        <div class="tabla-contenedor">
 
-<thead>
+            <table>
 
-<tr>
+                <thead>
 
-<th>Presentación</th>
+                    <tr>
 
-<th>N.º</th>
+                        <th>
+                            Presentación
+                        </th>
 
-<th>Inicial</th>
+                        <th>
+                            N.º
+                        </th>
 
-<th>Actual</th>
+                        <th>
+                            Inicial
+                        </th>
 
-<th>Unidad</th>
+                        <th>
+                            Actual
+                        </th>
 
-<th>Estado</th>
+                        <th>
+                            Unidad
+                        </th>
 
-<th>Acción</th>
+                        <th>
+                            Estado
+                        </th>
 
-</tr>
+                    </tr>
 
-</thead>
+                </thead>
 
 
-<tbody>
+                <tbody>
 
+                    {% for e in existencias %}
 
-{% for e in existencias %}
+                    <tr>
 
-<tr>
+                        <td>
+                            <strong>
+                                {{ e.tipo_presentacion }}
+                            </strong>
+                        </td>
 
 
-<td>
+                        <td>
 
-<strong>
-{{ e.tipo_presentacion }}
-</strong>
+                            <strong>
+                                #{{ e.numero }}
+                            </strong>
 
-</td>
+                        </td>
 
 
-<td>
+                        <td>
 
-<strong>
-#{{ e.numero }}
-</strong>
+                            {{ "%.2f"|format(
+                                e.cantidad_inicial or 0
+                            ) }}
 
-</td>
+                        </td>
 
 
-<td>
+                        <td>
 
-{{ "%.2f"|format(
-    e.cantidad_inicial or 0
-) }}
+                            <strong>
 
-</td>
+                                {{ "%.2f"|format(
+                                    e.cantidad_actual or 0
+                                ) }}
 
+                            </strong>
 
-<td>
+                        </td>
 
-<strong>
-{{ "%.2f"|format(
-    e.cantidad_actual or 0
-) }}
-</strong>
 
-</td>
+                        <td>
 
+                            <span class="badge">
 
-<td>
+                                {% if e.unidad_contenido == "metros" %}
 
-<span class="badge">
+                                    METROS
 
-{% if e.unidad_contenido == "metros" %}
+                                {% elif e.unidad_contenido == "kilos" %}
 
-METROS
+                                    KILOS
 
-{% elif e.unidad_contenido == "kilos" %}
+                                {% elif e.unidad_contenido == "unidad" %}
 
-KILOS
+                                    UNIDAD
 
-{% elif e.unidad_contenido == "unidad" %}
+                                {% else %}
 
-UNIDAD
+                                    {{ e.unidad_contenido }}
 
-{% else %}
+                                {% endif %}
 
-{{ e.unidad_contenido }}
+                            </span>
 
-{% endif %}
+                        </td>
 
-</span>
 
-</td>
+                        <td>
 
+                            {% if e.estado == "agotada"
+                                  or (e.cantidad_actual or 0) <= 0 %}
 
-<td>
+                                <span class="agotada">
 
-{% if e.estado == "agotada"
-      or (e.cantidad_actual or 0) <= 0 %}
+                                    AGOTADA
 
-<span class="agotada">
-AGOTADA
-</span>
+                                </span>
 
-{% else %}
+                            {% else %}
 
-<span class="disponible">
-DISPONIBLE
-</span>
+                                <span class="disponible">
 
-{% endif %}
+                                    DISPONIBLE
 
-</td>
+                                </span>
 
+                            {% endif %}
 
-<td>
+                        </td>
 
-<form
-    method="POST"
-    action="{{ url_for(
-        'eliminar_existencia',
-        id=e.id
-    ) }}"
-    onsubmit="return confirm(
-        '¿Seguro que quieres eliminar esta existencia?'
-    );"
->
+                    </tr>
 
-<button
-    type="submit"
-    class="btn-eliminar"
->
-🗑️ ELIMINAR
-</button>
 
-</form>
+                    {% else %}
 
-</td>
+                    <tr>
 
+                        <td colspan="6"
+                            class="mensaje-vacio">
 
-</tr>
+                            No hay existencias registradas.
 
+                        </td>
 
-{% else %}
+                    </tr>
 
-<tr>
+                    {% endfor %}
 
-<td colspan="7">
+                </tbody>
 
-No hay existencias registradas.
+            </table>
 
-</td>
+        </div>
 
-</tr>
+    </section>
 
-{% endfor %}
 
 
-</tbody>
+    <!-- ===================================================== -->
+    <!-- AGREGAR EXISTENCIA -->
+    <!-- ===================================================== -->
 
-</table>
+    <section class="panel">
 
-</div>
+        <h2>
+            ➕ AGREGAR EXISTENCIA
+        </h2>
 
-</section>
 
+        <form method="POST"
+              action="{{ url_for('entrada_inventario') }}"
+              class="form-inventario">
 
 
-<section class="panel">
+            <div class="grupo">
 
-<h2>➕ AGREGAR EXISTENCIA</h2>
+                <h3>
+                    Presentación
+                </h3>
 
+                <input
+                    name="presentacion"
+                    type="text"
+                    placeholder="Ejemplo: Bobina, Caja, Saco, Paquete, Suelto"
+                    required>
 
-<p>
-Las nuevas existencias se agregan desde el producto correspondiente.
-</p>
+            </div>
 
-<p>
-Ve a <strong>Productos</strong> para agregar una nueva entrada.
-</p>
 
-</section>
+            <label>
 
+                <strong>
+                    Cantidad de presentaciones
+                </strong>
 
+            </label>
 
-<section class="panel">
 
-<h2>📋 MOVIMIENTOS</h2>
+            <input
+                name="cantidad_contenedores"
+                type="number"
+                min="1"
+                step="1"
+                placeholder="Ejemplo: 3"
+                required>
 
 
-<div class="tabla-contenedor">
+            <label>
 
-<table>
+                <strong>
+                    Contenido de cada presentación
+                </strong>
 
-<thead>
+            </label>
 
-<tr>
 
-<th>Existencia</th>
+            <input
+                name="cantidad_por_contenedor"
+                type="number"
+                min="0.01"
+                step="0.01"
+                placeholder="Ejemplo: 100"
+                required>
 
-<th>Tipo</th>
 
-<th>Cantidad</th>
+            <label>
 
-<th>Venta</th>
+                <strong>
+                    Unidad de contenido
+                </strong>
 
-<th>Descripción</th>
+            </label>
 
-<th>Fecha</th>
 
-</tr>
+            <select
+                name="unidad"
+                required>
 
-</thead>
+                <option value="">
+                    Seleccione la unidad
+                </option>
 
+                <option value="metros">
+                    METROS
+                </option>
 
-<tbody>
+                <option value="kilos">
+                    KILOS
+                </option>
 
+                <option value="unidad">
+                    UNIDAD
+                </option>
 
-{% for m in movimientos %}
+            </select>
 
-<tr>
 
+            <button
+                type="submit"
+                class="boton-entrada">
 
-<td>
+                📥 REGISTRAR ENTRADA
 
-{% if m.existencia_numero %}
+            </button>
 
-#{{ m.existencia_numero }}
 
-{% else %}
+        </form>
 
--
+    </section>
 
-{% endif %}
 
-</td>
 
+    <!-- ===================================================== -->
+    <!-- MOVIMIENTOS -->
+    <!-- ===================================================== -->
 
-<td>
+    <section class="panel">
 
-{% if m.tipo == "ENTRADA" %}
 
-<span class="entrada">
-ENTRADA
-</span>
+        <div class="cabecera-movimientos">
 
-{% elif m.tipo == "SALIDA" %}
 
-<span class="salida">
-SALIDA
-</span>
+            <h2>
+                📋 MOVIMIENTOS
+            </h2>
 
-{% else %}
 
-{{ m.tipo }}
+            <!-- BOTÓN LIMPIAR -->
 
-{% endif %}
+            <form
+                method="POST"
+                action="{{ url_for('limpiar_movimientos') }}"
+                onsubmit="return confirm('⚠️ ¿ESTÁS SEGURO? Se eliminarán TODOS los movimientos del inventario. Las existencias NO se eliminarán.');">
 
-</td>
 
+                <button
+                    type="submit"
+                    class="boton-limpiar">
 
-<td>
+                    🧹 LIMPIAR MOVIMIENTOS
 
-{{ "%.2f"|format(
-    m.cantidad or 0
-) }}
+                </button>
 
-</td>
 
+            </form>
 
-<td>
 
-{{ m.numero_venta or "-" }}
+        </div>
 
-</td>
 
 
-<td>
+        <div class="tabla-contenedor">
 
-{{ m.descripcion or "-" }}
 
-</td>
+            <table>
 
 
-<td>
+                <thead>
 
-{{ m.fecha or "-" }}
+                    <tr>
 
-</td>
+                        <th>
+                            Existencia
+                        </th>
 
+                        <th>
+                            Tipo
+                        </th>
 
-</tr>
+                        <th>
+                            Cantidad
+                        </th>
 
+                        <th>
+                            Venta
+                        </th>
 
-{% else %}
+                        <th>
+                            Descripción
+                        </th>
 
-<tr>
+                        <th>
+                            Fecha
+                        </th>
 
-<td colspan="6">
+                    </tr>
 
-No hay movimientos registrados.
+                </thead>
 
-</td>
 
-</tr>
 
-{% endfor %}
+                <tbody>
 
 
-</tbody>
+                    {% for m in movimientos %}
 
-</table>
 
-</div>
+                    <tr>
 
-</section>
+
+                        <td>
+
+                            {% if m.existencia_numero %}
+
+                                #{{ m.existencia_numero }}
+
+                            {% else %}
+
+                                -
+
+                            {% endif %}
+
+                        </td>
+
+
+
+                        <td>
+
+
+                            {% if m.tipo == "ENTRADA" %}
+
+                                <span class="entrada">
+
+                                    ENTRADA
+
+                                </span>
+
+
+                            {% elif m.tipo == "SALIDA" %}
+
+                                <span class="salida">
+
+                                    SALIDA
+
+                                </span>
+
+
+                            {% else %}
+
+                                {{ m.tipo }}
+
+                            {% endif %}
+
+
+                        </td>
+
+
+
+                        <td>
+
+                            {{ "%.2f"|format(
+                                m.cantidad or 0
+                            ) }}
+
+                        </td>
+
+
+
+                        <td>
+
+                            {{ m.numero_venta or "-" }}
+
+                        </td>
+
+
+
+                        <td>
+
+                            {{ m.descripcion or "-" }}
+
+                        </td>
+
+
+
+                        <td>
+
+                            {{ m.fecha or "-" }}
+
+                        </td>
+
+
+                    </tr>
+
+
+                    {% else %}
+
+
+                    <tr>
+
+                        <td
+                            colspan="6"
+                            class="mensaje-vacio">
+
+                            No hay movimientos registrados.
+
+                        </td>
+
+                    </tr>
+
+
+                    {% endfor %}
+
+
+                </tbody>
+
+
+            </table>
+
+
+        </div>
+
+
+    </section>
 
 
 </main>
@@ -484,4 +709,3 @@ No hay movimientos registrados.
 </body>
 
 </html>
-```
