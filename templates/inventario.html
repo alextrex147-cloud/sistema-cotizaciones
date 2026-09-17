@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Inventario</title>
+
+<link rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}">
+
+<style>
+
+.tabla-contenedor {
+    width: 100%;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+}
+
+th {
+    background: #f2f2f2;
+}
+
+.form-inventario {
+    display: grid;
+    gap: 12px;
+}
+
+.form-inventario input,
+.form-inventario select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+.grupo {
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 10px;
+    background: #fafafa;
+}
+
+.ayuda {
+    color: #666;
+    font-size: 14px;
+}
+
+.badge {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 6px;
+    background: #eee;
+}
+
+.disponible {
+    color: green;
+    font-weight: bold;
+}
+
+.agotada {
+    color: red;
+    font-weight: bold;
+}
+
+.bajo {
+    color: orange;
+    font-weight: bold;
+}
+
+.entrada {
+    color: green;
+    font-weight: bold;
+}
+
+.salida {
+    color: red;
+    font-weight: bold;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<h1>INVENTARIO</h1>
+
+</header>
+
+<nav>
+
+<a href="{{ url_for('inicio') }}">
+🏠 Inicio
+</a>
+
+<a href="{{ url_for('nueva_cotizacion') }}">
+🧾 Nueva cotización
+</a>
+
+<a href="{{ url_for('historial') }}">
+📋 Cotizaciones
+</a>
+
+<a href="{{ url_for('ventas') }}">
+💰 Ventas
+</a>
+
+<a href="{{ url_for('inventario') }}">
+📦 Inventario
+</a>
+
+<a href="{{ url_for('productos') }}">
+🛒 Productos
+</a>
+
+<a href="{{ url_for('caja') }}">
+💵 Caja
+</a>
+
+<a href="{{ url_for('reportes') }}">
+📊 Reportes
+</a>
+
+</nav>
+
+<main>
+
+<!-- =====================================================
+     RESUMEN
+===================================================== -->
+
+<section class="panel">
+
+<h2>📦 RESUMEN DE PRODUCTOS</h2>
+
+<div class="tabla-contenedor">
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Producto</th>
+
+<th>Tipo de venta</th>
+
+<th>Stock total</th>
+
+<th>Mínimo</th>
+
+<th>Estado</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for p in productos %}
+
+<tr>
+
+<td>
+
+<strong>
+{{ p.nombre }}
+</strong>
+
+{% if p.descripcion %}
+
+<br>
+
+<small>
+{{ p.descripcion }}
+</small>
+
+{% endif %}
+
+</td>
+
+<td>
+
+<span class="badge">
+
+{% if p.tipo_venta == "metro" %}
+
+METRO
+
+{% elif p.tipo_venta == "kilo" %}
+
+KILO
+
+{% else %}
+
+UNIDAD
+
+{% endif %}
+
+</span>
+
+</td>
+
+<td>
+
+{{ "%.2f"|format(p.stock or 0) }}
+
+</td>
+
+<td>
+
+{{ "%.2f"|format(p.stock_minimo or 0) }}
+
+</td>
+
+<td>
+
+{% if (p.stock or 0) <= 0 %}
+
+<span class="agotada">
+AGOTADO
+</span>
+
+{% elif (p.stock or 0) <= (p.stock_minimo or 0) %}
+
+<span class="bajo">
+STOCK BAJO
+</span>
+
+{% else %}
+
+<span class="disponible">
+NORMAL
+</span>
+
+{% endif %}
+
+</td>
+
+</tr>
+
+{% else %}
+
+<tr>
+
+<td colspan="5">
+
+No hay productos registrados.
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+</section>
+
+
+<!-- =====================================================
+     EXISTENCIAS INDIVIDUALES
+===================================================== -->
+
+<section class="panel">
+
+<h2>📦 EXISTENCIAS INDIVIDUALES</h2>
+
+<p class="ayuda">
+
+Cada Bobina, Caja, Saco, Paquete o existencia se controla
+por separado.
+
+Las existencias agotadas NO se eliminan.
+
+</p>
+
+<div class="tabla-contenedor">
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Producto</th>
+
+<th>Presentación</th>
+
+<th>N.º</th>
+
+<th>Inicial</th>
+
+<th>Actual</th>
+
+<th>Unidad</th>
+
+<th>Estado</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for e in existencias %}
+
+<tr>
+
+<td>
+
+<strong>
+{{ e.producto_nombre }}
+</strong>
+
+</td>
+
+<td>
+
+{{ e.tipo_presentacion }}
+
+</td>
+
+<td>
+
+<strong>
+#{{ e.numero }}
+</strong>
+
+</td>
+
+<td>
+
+{{ "%.2f"|format(e.cantidad_inicial or 0) }}
+
+</td>
+
+<td>
+
+<strong>
+{{ "%.2f"|format(e.cantidad_actual or 0) }}
+</strong>
+
+</td>
+
+<td>
+
+<span class="badge">
+
+{% if e.unidad_contenido == "metros" %}
+
+METROS
+
+{% elif e.unidad_contenido == "kilos" %}
+
+KILOS
+
+{% elif e.unidad_contenido == "unidad" %}
+
+UNIDAD
+
+{% else %}
+
+{{ e.unidad_contenido }}
+
+{% endif %}
+
+</span>
+
+</td>
+
+<td>
+
+{% if e.estado == "agotada" or (e.cantidad_actual or 0) <= 0 %}
+
+<span class="agotada">
+AGOTADA
+</span>
+
+{% else %}
+
+<span class="disponible">
+DISPONIBLE
+</span>
+
+{% endif %}
+
+</td>
+
+</tr>
+
+{% else %}
+
+<tr>
+
+<td colspan="7">
+
+No hay existencias registradas.
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+</section>
+
+
+<!-- =====================================================
+     NUEVA ENTRADA
+===================================================== -->
+
+<section class="panel">
+
+<h2>➕ AGREGAR ENTRADA DE INVENTARIO</h2>
+
+<form
+    method="POST"
+    action="{{ url_for('entrada_inventario') }}"
+    class="form-inventario"
+>
+
+<label>
+<strong>Producto</strong>
+</label>
+
+<select
+    name="producto_id"
+    required
+>
+
+<option value="">
+Seleccione el producto
+</option>
+
+{% for p in productos %}
+
+<option value="{{ p.id }}">
+
+{{ p.nombre }}
+
+</option>
+
+{% endfor %}
+
+</select>
+
+
+<div class="grupo">
+
+<h3>📦 Presentación</h3>
+
+<p class="ayuda">
+
+Puedes escribir libremente la presentación.
+
+Ejemplos:
+
+Bobina, Caja, Saco, Paquete, Suelto.
+
+</p>
+
+<input
+    name="presentacion"
+    type="text"
+    placeholder="Ejemplo: Bobina"
+    required
+>
+
+</div>
+
+
+<label>
+
+<strong>
+Cantidad de presentaciones
+</strong>
+
+</label>
+
+<input
+    name="cantidad_contenedores"
+    type="number"
+    min="1"
+    step="1"
+    placeholder="Ejemplo: 3"
+    required
+>
+
+
+<label>
+
+<strong>
+Contenido de cada presentación
+</strong>
+
+</label>
+
+<input
+    name="cantidad_por_contenedor"
+    type="number"
+    min="0.01"
+    step="0.01"
+    placeholder="Ejemplo: 1000"
+    required
+>
+
+
+<label>
+
+<strong>
+Unidad de contenido
+</strong>
+
+</label>
+
+<select
+    name="unidad"
+    required
+>
+
+<option value="">
+Seleccione la unidad
+</option>
+
+<option value="metros">
+METROS
+</option>
+
+<option value="kilos">
+KILOS
+</option>
+
+<option value="unidad">
+UNIDAD
+</option>
+
+</select>
+
+
+<label>
+
+<strong>
+Motivo
+</strong>
+
+</label>
+
+<input
+    name="motivo"
+    type="text"
+    placeholder="Ejemplo: Compra de mercadería"
+>
+
+
+<div class="grupo">
+
+<h3>💡 EJEMPLOS</h3>
+
+<p class="ayuda">
+
+<strong>
+3 Bobinas × 1000 METROS
+</strong>
+
+<br>
+
+→ Bobina #1 = 1000 METROS
+
+<br>
+
+→ Bobina #2 = 1000 METROS
+
+<br>
+
+→ Bobina #3 = 1000 METROS
+
+<br><br>
+
+<strong>
+2 Cajas × 50 KILOS
+</strong>
+
+<br>
+
+→ Caja #1 = 50 KILOS
+
+<br>
+
+→ Caja #2 = 50 KILOS
+
+<br><br>
+
+<strong>
+100 UNIDADES
+</strong>
+
+<br>
+
+→ 100 UNIDADES disponibles.
+
+</p>
+
+</div>
+
+
+<button type="submit">
+
+📥 REGISTRAR ENTRADA
+
+</button>
+
+</form>
+
+</section>
+
+
+<!-- =====================================================
+     MOVIMIENTOS NUEVOS
+===================================================== -->
+
+<section class="panel">
+
+<h2>📋 MOVIMIENTOS DE EXISTENCIAS</h2>
+
+<div class="tabla-contenedor">
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Producto</th>
+
+<th>Existencia</th>
+
+<th>Tipo</th>
+
+<th>Cantidad</th>
+
+<th>Venta</th>
+
+<th>Descripción</th>
+
+<th>Fecha</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for m in movimientos %}
+
+<tr>
+
+<td>
+
+<strong>
+{{ m.producto_nombre or m.producto_id }}
+</strong>
+
+</td>
+
+<td>
+
+{% if m.existencia_numero %}
+
+#{{ m.existencia_numero }}
+
+{% else %}
+
+-
+
+{% endif %}
+
+</td>
+
+<td>
+
+{% if m.tipo == "ENTRADA" %}
+
+<span class="entrada">
+ENTRADA
+</span>
+
+{% elif m.tipo == "SALIDA" %}
+
+<span class="salida">
+SALIDA
+</span>
+
+{% else %}
+
+{{ m.tipo }}
+
+{% endif %}
+
+</td>
+
+<td>
+
+{{ "%.2f"|format(m.cantidad or 0) }}
+
+</td>
+
+<td>
+
+{{ m.numero_venta or "-" }}
+
+</td>
+
+<td>
+
+{{ m.descripcion or "-" }}
+
+</td>
+
+<td>
+
+{{ m.fecha or "-" }}
+
+</td>
+
+</tr>
+
+{% else %}
+
+<tr>
+
+<td colspan="7">
+
+No hay movimientos registrados.
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+</section>
+
+</main>
+
+</body>
+
+</html>
