@@ -2013,3 +2013,60 @@ if __name__ == "__main__":
         ),
         debug=True
     )
+    @app.route("/eliminar-movimiento/<int:id>", methods=["POST"])
+def eliminar_movimiento(id):
+    try:
+        movimiento = (
+            supabase
+            .table("movimientos_existencias")
+            .select("*")
+            .eq("id", id)
+            .limit(1)
+            .execute()
+        )
+
+        if not movimiento.data:
+            return "Movimiento no encontrado", 404
+
+        m = movimiento.data[0]
+
+        existencia_id = m.get("existencia_id")
+        producto_id = m.get("producto_id")
+
+        # Eliminar el movimiento
+        supabase.table("movimientos_existencias") \
+            .delete() \
+            .eq("id", id) \
+            .execute()
+
+        # Si era un movimiento de ENTRADA o SALIDA,
+        # recalculamos el stock del producto.
+        if producto_id:
+            actualizar_stock_general(producto_id)
+
+        if existencia_id:
+            # Comprobar si todavía existe la existencia
+            existencia = (
+                supabase
+                .table("existencias_inventario")
+                .select("*")
+                .eq("id", existencia_id)
+                .limit(1)
+                .execute()
+            )
+
+            if existencia.data:
+                e = existencia.data[0]
+
+                cantidad = float(e.get("cantidad_actual") or 0)
+
+                nuevo_estado = "agotada" if cantidad <= 0 else "disponible"
+
+                supabase.table("existencias_inventario").update({
+                    "estado": nuevo_estado
+                }).eq("id", existencia_id).execute()
+
+        return redirect(url_for("inventario"))
+
+    except Exception as e:
+        return f"Error al eliminar movimiento: {e}", 500
