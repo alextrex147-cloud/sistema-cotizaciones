@@ -3,583 +3,464 @@
 
 <head>
 
-<meta charset="UTF-8">
+    <meta charset="UTF-8">
 
-<meta name="viewport"
-      content="width=device-width, initial-scale=1.0">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-<title>Productos</title>
+    <title>Productos</title>
 
-<link rel="stylesheet"
-      href="{{ url_for('static', filename='style.css') }}">
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
 
-<style>
+    <style>
 
-.form-inventario {
-    display: grid;
-    gap: 12px;
-    margin-top: 15px;
-}
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f4f6f8;
+        }
 
-.form-inventario input,
-.form-inventario select,
-.form-inventario textarea {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 12px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    font-size: 16px;
-}
+        .contenedor {
+            max-width: 1300px;
+            margin: auto;
+        }
 
-.grupo-inventario {
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    padding: 15px;
-    margin-top: 10px;
-    background: #fafafa;
-}
+        .tarjeta {
+            background: white;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
 
-.grupo-inventario h3 {
-    margin-top: 0;
-}
+        h1,
+        h2 {
+            color: #222;
+        }
 
-.ayuda {
-    font-size: 13px;
-    color: #666;
-}
+        .formulario {
+            display: grid;
+            grid-template-columns:
+                repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
 
-.tabla-contenedor {
-    overflow-x: auto;
-}
+        input,
+        select,
+        button {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 11px;
+            border-radius: 7px;
+            border: 1px solid #ccc;
+            font-size: 15px;
+        }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
+        button {
+            border: none;
+            background: #111;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
 
-th,
-td {
-    padding: 10px;
-    border-bottom: 1px solid #ddd;
-    text-align: left;
-}
+        button:hover {
+            opacity: 0.85;
+        }
 
-th {
-    background: #f2f2f2;
-}
+        .boton-eliminar {
+            background: #d62828;
+        }
 
-.badge {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 6px;
-    background: #eee;
-    font-size: 13px;
-}
+        .boton-volver {
+            display: inline-block;
+            text-decoration: none;
+            background: #444;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 7px;
+            margin-bottom: 20px;
+        }
 
-.danger {
-    background: #dc3545;
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-}
+        .tabla-contenedor {
+            overflow-x: auto;
+        }
 
-</style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 900px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background: #111;
+            color: white;
+        }
+
+        .ayuda {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .accion {
+            width: 140px;
+        }
+
+    </style>
 
 </head>
 
 <body>
 
-<header>
+<div class="contenedor">
 
-<h1>PRODUCTOS</h1>
+    <a
+        href="{{ url_for('inicio') }}"
+        class="boton-volver"
+    >
+        ← VOLVER
+    </a>
 
-</header>
 
+    <h1>📦 PRODUCTOS</h1>
 
-<nav>
 
-<a href="{{ url_for('inicio') }}">
-🏠 Inicio
-</a>
+    <!-- =====================================================
+         AGREGAR PRODUCTO
+         ===================================================== -->
 
-<a href="{{ url_for('nueva_cotizacion') }}">
-🧾 Nueva cotización
-</a>
+    <div class="tarjeta">
 
-<a href="{{ url_for('inventario') }}">
-📦 Inventario
-</a>
+        <h2>➕ AGREGAR PRODUCTO</h2>
 
-<a href="{{ url_for('historial') }}">
-📋 Cotizaciones
-</a>
+        <p class="ayuda">
+            Escribe el producto y pulsa guardar.
+            No se utiliza presentación.
+        </p>
 
-<a href="{{ url_for('ventas') }}">
-💰 Ventas
-</a>
+        <form
+            action="{{ url_for('agregar_producto') }}"
+            method="POST"
+        >
 
-</nav>
+            <div class="formulario">
 
+                <div>
 
-<main>
+                    <label>
+                        Producto
+                    </label>
 
+                    <input
+                        type="text"
+                        name="nombre"
+                        placeholder="Ej: Calamina"
+                        required
+                        autocomplete="off"
+                    >
 
-<!-- =====================================================
-     AGREGAR PRODUCTO
-===================================================== -->
+                </div>
 
-<section class="panel">
 
-<h2>➕ AGREGAR PRODUCTO</h2>
+                <div>
 
-<form
-    method="POST"
-    action="{{ url_for('agregar_producto') }}"
-    class="form-inventario"
->
+                    <label>
+                        Descripción
+                    </label>
 
+                    <input
+                        type="text"
+                        name="descripcion"
+                        placeholder="Descripción"
+                    >
 
-<label>
+                </div>
 
-<strong>
-Nombre del producto
-</strong>
 
-</label>
+                <div>
 
-<input
-    name="nombre"
-    placeholder="Ejemplo: Calamina trapezoidal"
-    required
->
+                    <label>
+                        Tipo de venta
+                    </label>
 
+                    <select
+                        name="tipo_venta"
+                        required
+                    >
 
-<label>
+                        <option value="unidad">
+                            UNIDAD
+                        </option>
 
-<strong>
-Descripción
-</strong>
+                        <option value="metro">
+                            METRO
+                        </option>
 
-</label>
+                        <option value="kilo">
+                            KILO
+                        </option>
 
-<input
-    name="descripcion"
-    placeholder="Descripción del producto"
->
+                    </select>
 
+                </div>
 
-<label>
 
-<strong>
-Tipo de venta
-</strong>
+                <div>
 
-</label>
+                    <label>
+                        Precio
+                    </label>
 
-<select
-    name="tipo_venta"
-    id="tipo"
-    required
->
+                    <input
+                        type="number"
+                        name="precio"
+                        min="0"
+                        step="0.01"
+                        value="0"
+                    >
 
-<option value="unidad">
-UNIDAD
-</option>
+                </div>
 
-<option value="metro">
-METRO
-</option>
 
-<option value="kilo">
-KILO
-</option>
+                <div>
 
-</select>
+                    <label>
+                        Stock mínimo
+                    </label>
 
+                    <input
+                        type="number"
+                        name="stock_minimo"
+                        min="0"
+                        step="0.01"
+                        value="0"
+                    >
 
-<label>
+                </div>
 
-<strong>
-Precio
-</strong>
 
-</label>
+                <div>
 
-<input
-    name="precio"
-    type="number"
-    step="0.01"
-    min="0"
-    placeholder="Ejemplo: 25"
-    required
->
+                    <label>
+                        Cantidad de existencias
+                    </label>
 
+                    <input
+                        type="number"
+                        name="cantidad_existencias"
+                        min="0"
+                        step="1"
+                        value="0"
+                    >
 
-<label>
+                </div>
 
-<strong>
-Stock mínimo
-</strong>
 
-</label>
+                <div>
 
-<input
-    name="stock_minimo"
-    type="number"
-    step="0.01"
-    min="0"
-    placeholder="Ejemplo: 100"
->
+                    <label>
+                        Cantidad por existencia
+                    </label>
 
+                    <input
+                        type="number"
+                        name="cantidad_por_existencia"
+                        min="0"
+                        step="0.01"
+                        value="0"
+                    >
 
-<!-- =====================================================
-     INVENTARIO INICIAL
-===================================================== -->
+                </div>
 
-<div class="grupo-inventario">
 
-<h3>
-📦 INVENTARIO INICIAL
-</h3>
+                <div>
 
-<p class="ayuda">
+                    <label>
+                        Unidad
+                    </label>
 
-Aquí registras cómo tienes guardado el producto.
+                    <select name="unidad">
 
-La presentación puede escribirse libremente.
+                        <option value="unidad">
+                            UNIDAD
+                        </option>
 
-Ejemplos:
+                        <option value="metros">
+                            METROS
+                        </option>
 
-Bobina, Caja, Saco, Paquete o Suelto.
+                        <option value="kilos">
+                            KILOS
+                        </option>
 
-</p>
+                    </select>
 
+                </div>
 
-<label>
+            </div>
 
-<strong>
-Presentación
-</strong>
 
-</label>
+            <br>
 
-<input
-    name="presentacion"
-    type="text"
-    placeholder="Ejemplo: Bobina"
-    required
->
 
+            <button type="submit">
+                💾 GUARDAR PRODUCTO
+            </button>
 
-<label>
+        </form>
 
-<strong>
-Cantidad de presentaciones
-</strong>
+    </div>
 
-</label>
 
-<input
-    name="cantidad_contenedores"
-    type="number"
-    min="1"
-    step="1"
-    placeholder="Ejemplo: 3"
-    required
->
+    <!-- =====================================================
+         LISTA DE PRODUCTOS
+         ===================================================== -->
 
+    <div class="tarjeta">
 
-<label>
+        <h2>📋 PRODUCTOS REGISTRADOS</h2>
 
-<strong>
-Contenido de cada presentación
-</strong>
+        <div class="tabla-contenedor">
 
-</label>
+            <table>
 
-<input
-    name="cantidad_por_contenedor"
-    type="number"
-    min="0.01"
-    step="0.01"
-    placeholder="Ejemplo: 1000"
-    required
->
+                <thead>
 
+                    <tr>
 
-<label>
+                        <th>
+                            ID
+                        </th>
 
-<strong>
-Unidad de contenido
-</strong>
+                        <th>
+                            Producto
+                        </th>
 
-</label>
+                        <th>
+                            Descripción
+                        </th>
 
-<select
-    name="unidad"
-    required
->
+                        <th>
+                            Tipo
+                        </th>
 
-<option value="">
-Seleccione la unidad
-</option>
+                        <th>
+                            Precio
+                        </th>
 
-<option value="metros">
-METROS
-</option>
+                        <th>
+                            Stock
+                        </th>
 
-<option value="kilos">
-KILOS
-</option>
+                        <th>
+                            Stock mínimo
+                        </th>
 
-<option value="unidad">
-UNIDAD
-</option>
+                        <th class="accion">
+                            Acción
+                        </th>
 
-</select>
+                    </tr>
 
+                </thead>
 
-<p class="ayuda">
+                <tbody>
 
-<strong>
-Ejemplo 1:
-</strong>
+                {% if productos %}
 
-3 Bobinas × 1000 METROS
+                    {% for p in productos %}
 
-<br>
+                    <tr>
 
-→ Bobina #1 = 1000 METROS
+                        <td>
+                            {{ p.id }}
+                        </td>
 
-<br>
+                        <td>
+                            <strong>
+                                {{ p.nombre }}
+                            </strong>
+                        </td>
 
-→ Bobina #2 = 1000 METROS
+                        <td>
+                            {{ p.descripcion or "-" }}
+                        </td>
 
-<br>
+                        <td>
+                            {{ p.tipo_venta|upper }}
+                        </td>
 
-→ Bobina #3 = 1000 METROS
+                        <td>
+                            Bs {{ "%.2f"|format(
+                                p.precio|float
+                            ) }}
+                        </td>
 
-<br><br>
+                        <td>
+                            {{ p.stock or 0 }}
+                        </td>
 
-<strong>
-Ejemplo 2:
-</strong>
+                        <td>
+                            {{ p.stock_minimo or 0 }}
+                        </td>
 
-5 Cajas × 50 KILOS
+                        <td>
 
-<br>
+                            <form
+                                action="{{ url_for('eliminar_producto', id=p.id) }}"
+                                method="POST"
+                                onsubmit="return confirm('¿Seguro que quieres eliminar este producto y sus existencias?');"
+                            >
 
-→ Caja #1 = 50 KILOS
+                                <button
+                                    type="submit"
+                                    class="boton-eliminar"
+                                >
+                                    🗑️ ELIMINAR
+                                </button>
 
-<br>
+                            </form>
 
-→ Caja #2 = 50 KILOS
+                        </td>
 
-<br>
+                    </tr>
 
-→ Caja #3 = 50 KILOS
+                    {% endfor %}
 
-<br>
+                {% else %}
 
-→ Caja #4 = 50 KILOS
+                    <tr>
 
-<br>
+                        <td colspan="8">
+                            No hay productos registrados.
+                        </td>
 
-→ Caja #5 = 50 KILOS
+                    </tr>
 
-<br><br>
+                {% endif %}
 
-<strong>
-Ejemplo 3:
-</strong>
+                </tbody>
 
-100 unidades sueltas
+            </table>
 
-</p>
+        </div>
+
+    </div>
 
 </div>
-
-
-<button
-    type="submit"
->
-
-💾 GUARDAR PRODUCTO
-
-</button>
-
-</form>
-
-</section>
-
-
-<!-- =====================================================
-     LISTA DE PRODUCTOS
-===================================================== -->
-
-<section class="panel">
-
-<h2>
-📋 PRODUCTOS REGISTRADOS
-</h2>
-
-<div class="tabla-contenedor">
-
-<table>
-
-<thead>
-
-<tr>
-
-<th>
-Producto
-</th>
-
-<th>
-Tipo de venta
-</th>
-
-<th>
-Stock total
-</th>
-
-<th>
-Stock mínimo
-</th>
-
-<th>
-Precio
-</th>
-
-<th>
-Acción
-</th>
-
-</tr>
-
-</thead>
-
-<tbody>
-
-{% for p in productos %}
-
-<tr>
-
-<td>
-
-<strong>
-{{ p.nombre }}
-</strong>
-
-{% if p.descripcion %}
-
-<br>
-
-<small>
-{{ p.descripcion }}
-</small>
-
-{% endif %}
-
-</td>
-
-
-<td>
-
-<span class="badge">
-
-{% if p.tipo_venta == "metro" %}
-
-METRO
-
-{% elif p.tipo_venta == "kilo" %}
-
-KILO
-
-{% else %}
-
-UNIDAD
-
-{% endif %}
-
-</span>
-
-</td>
-
-
-<td>
-
-{{ "%.2f"|format(p.stock or 0) }}
-
-</td>
-
-
-<td>
-
-{{ "%.2f"|format(p.stock_minimo or 0) }}
-
-</td>
-
-
-<td>
-
-{{ "%.2f"|format(p.precio or 0) }}
-
-Bs
-
-</td>
-
-
-<td>
-
-<form
-    method="POST"
-    action="{{ url_for('eliminar_producto', id=p.id) }}"
-    onsubmit="return confirm('¿Estás seguro de eliminar este producto?');"
->
-
-<button
-    type="submit"
-    class="danger"
->
-
-🗑️ Eliminar
-
-</button>
-
-</form>
-
-</td>
-
-</tr>
-
-{% else %}
-
-<tr>
-
-<td colspan="6">
-
-No hay productos registrados.
-
-</td>
-
-</tr>
-
-{% endfor %}
-
-</tbody>
-
-</table>
-
-</div>
-
-</section>
-
-
-</main>
 
 </body>
 
