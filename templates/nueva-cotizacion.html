@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Nueva cotización</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body>
+
+<nav class="no-print">
+
+<a href="{{ url_for('inicio') }}">🏠 Inicio</a>
+<a href="{{ url_for('historial') }}">📋 Cotizaciones</a>
+<a href="{{ url_for('ventas') }}">💰 Ventas</a>
+<a href="{{ url_for('inventario') }}">📦 Inventario</a>
+
+</nav>
+
+<main>
+
+<form method="POST" action="{{ url_for('guardar_cotizacion') }}" id="formulario">
+
+<div class="hoja">
+
+<h1>COTIZACIÓN</h1>
+
+<div class="encabezado">
+
+<div>
+
+<strong>Número:</strong>
+
+<input name="numero" value="{{ numero }}" readonly>
+
+</div>
+
+<div>
+
+<strong>Fecha:</strong>
+
+<input value="{{ now if now else '' }}" readonly>
+
+</div>
+
+</div>
+
+<hr>
+
+<h2>CLIENTE</h2>
+
+<label>Buscar / escribir cliente</label>
+
+<input list="lista-clientes"
+       name="cliente_nombre"
+       id="cliente_nombre"
+       placeholder="Escribe el nombre del cliente"
+       required>
+
+<datalist id="lista-clientes">
+
+{% for c in clientes %}
+
+<option value="{{ c.nombre }}">
+
+{% endfor %}
+
+</datalist>
+
+<input name="cliente_telefono" placeholder="Teléfono">
+
+<input name="cliente_direccion" placeholder="Dirección">
+
+<input name="cliente_email" placeholder="Correo">
+
+<hr>
+
+<h2>PRODUCTOS</h2>
+
+<div id="productos">
+
+<div class="producto">
+
+<input list="lista-productos"
+       name="producto_nombre[]"
+       placeholder="Producto"
+       class="nombre-producto"
+       required>
+
+<datalist id="lista-productos">
+
+{% for p in productos %}
+
+<option value="{{ p.nombre }}"
+        data-tipo="{{ p.tipo_venta }}"
+        data-precio="{{ p.precio }}">
+</option>
+
+{% endfor %}
+
+</datalist>
+
+<select name="producto_tipo[]" class="tipo-producto">
+
+<option value="unidad">Unidad</option>
+<option value="metro">Metro</option>
+
+</select>
+
+<input name="cantidad[]"
+       type="number"
+       step="0.01"
+       placeholder="Cantidad"
+       class="cantidad"
+       required>
+
+<input name="largo[]"
+       type="number"
+       step="0.01"
+       placeholder="Largo en metros"
+       class="largo">
+
+<input name="precio[]"
+       type="number"
+       step="0.01"
+       placeholder="Precio"
+       class="precio"
+       required>
+
+<input name="producto_descripcion[]"
+       placeholder="Descripción">
+
+<strong class="subtotal">0.00 Bs</strong>
+
+<button type="button"
+        class="danger"
+        onclick="this.parentElement.remove(); calcular()">
+Eliminar
+</button>
+
+</div>
+
+</div>
+
+<button type="button" onclick="agregarProducto()">
++ Agregar producto
+</button>
+
+<hr>
+
+<label>Descuento</label>
+
+<input name="descuento"
+       id="descuento"
+       type="number"
+       step="0.01"
+       value="0"
+       oninput="calcular()">
+
+<h3>Subtotal: <span id="subtotal-general">0.00</span> Bs</h3>
+
+<h2>TOTAL: <span id="total">0.00</span> Bs</h2>
+
+<label>Observaciones</label>
+
+<textarea name="observaciones"></textarea>
+
+<div class="botones">
+
+<button type="submit">
+💾 GUARDAR COTIZACIÓN
+</button>
+
+<button type="button" onclick="window.print()">
+🖨️ IMPRIMIR
+</button>
+
+</div>
+
+</div>
+
+</form>
+
+</main>
+
+<script>
+
+function configurarProducto(fila) {
+
+    const nombre = fila.querySelector(".nombre-producto");
+
+    const tipo = fila.querySelector(".tipo-producto");
+
+    const largo = fila.querySelector(".largo");
+
+    const precio = fila.querySelector(".precio");
+
+    nombre.addEventListener("input", function() {
+
+        const opciones = document.querySelectorAll("#lista-productos option");
+
+        for (const opcion of opciones) {
+
+            if (opcion.value.toLowerCase() === nombre.value.toLowerCase()) {
+
+                tipo.value = opcion.dataset.tipo || "unidad";
+
+                precio.value = opcion.dataset.precio || 0;
+
+                actualizarCampos(fila);
+
+                calcular();
+
+                break;
+            }
+        }
+
+    });
+
+    tipo.addEventListener("change", function() {
+
+        actualizarCampos(fila);
+
+        calcular();
+
+    });
+
+    fila.querySelector(".cantidad").addEventListener("input", calcular);
+
+    largo.addEventListener("input", calcular);
+
+    precio.addEventListener("input", calcular);
+}
+
+
+function actualizarCampos(fila) {
+
+    const tipo = fila.querySelector(".tipo-producto").value;
+
+    const largo = fila.querySelector(".largo");
+
+    if (tipo === "metro") {
+
+        largo.style.display = "block";
+
+        largo.required = true;
+
+        largo.placeholder = "Largo de cada pieza (m)";
+
+    } else {
+
+        largo.style.display = "none";
+
+        largo.required = false;
+
+        largo.value = "";
+
+    }
+
+}
+
+
+function agregarProducto() {
+
+    const contenedor = document.getElementById("productos");
+
+    const original = contenedor.querySelector(".producto");
+
+    const nuevo = original.cloneNode(true);
+
+    nuevo.querySelector(".nombre-producto").value = "";
+
+    nuevo.querySelector(".cantidad").value = "";
+
+    nuevo.querySelector(".largo").value = "";
+
+    nuevo.querySelector(".precio").value = "";
+
+    nuevo.querySelector(".producto_descripcion").value = "";
+
+    nuevo.querySelector(".tipo-producto").value = "unidad";
+
+    nuevo.querySelector(".subtotal").textContent = "0.00 Bs";
+
+    contenedor.appendChild(nuevo);
+
+    configurarProducto(nuevo);
+
+    actualizarCampos(nuevo);
+
+}
+
+
+function calcular() {
+
+    let total = 0;
+
+    document.querySelectorAll(".producto").forEach(function(fila) {
+
+        const tipo = fila.querySelector(".tipo-producto").value;
+
+        const cantidad = parseFloat(
+            fila.querySelector(".cantidad").value
+        ) || 0;
+
+        const largo = parseFloat(
+            fila.querySelector(".largo").value
+        ) || 0;
+
+        const precio = parseFloat(
+            fila.querySelector(".precio").value
+        ) || 0;
+
+        let subtotal = 0;
+
+        if (tipo === "metro") {
+
+            subtotal = cantidad * largo * precio;
+
+        } else {
+
+            subtotal = cantidad * precio;
+
+        }
+
+        fila.querySelector(".subtotal").textContent =
+            subtotal.toFixed(2) + " Bs";
+
+        total += subtotal;
+
+    });
+
+    const descuento = parseFloat(
+        document.getElementById("descuento").value
+    ) || 0;
+
+    document.getElementById("subtotal-general").textContent =
+        total.toFixed(2);
+
+    document.getElementById("total").textContent =
+        Math.max(total - descuento, 0).toFixed(2);
+
+}
+
+
+document.querySelectorAll(".producto").forEach(function(fila) {
+
+    configurarProducto(fila);
+
+    actualizarCampos(fila);
+
+});
+
+calcular();
+
+</script>
+
+</body>
+</html>
