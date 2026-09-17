@@ -1,14 +1,7 @@
 import os
 from datetime import datetime
 
-from flask import (
-    Flask,
-    render_template,
-    request,
-    redirect,
-    url_for
-)
-
+from flask import Flask, render_template, request, redirect, url_for
 from dotenv import load_dotenv
 from supabase import create_client
 
@@ -19,24 +12,25 @@ from supabase import create_client
 
 load_dotenv()
 
-app = Flask(__name__)
-
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
-if not SUPABASE_URL or not SUPABASE_KEY:
-    raise Exception(
-        "Faltan SUPABASE_URL o SUPABASE_KEY en las variables de entorno."
-    )
+if not SUPABASE_URL:
+    raise Exception("Falta SUPABASE_URL")
+
+if not SUPABASE_KEY:
+    raise Exception("Falta SUPABASE_KEY")
 
 supabase = create_client(
     SUPABASE_URL,
     SUPABASE_KEY
 )
 
+app = Flask(__name__)
+
 
 # ============================================================
-# FUNCIONES GENERALES
+# FUNCIONES AUXILIARES
 # ============================================================
 
 def numero_siguiente(tabla, campo="numero"):
@@ -51,45 +45,51 @@ def numero_siguiente(tabla, campo="numero"):
         )
 
         if respuesta.data:
-            ultimo = respuesta.data[0].get(campo)
-
-            try:
-                return int(ultimo) + 1
-            except:
-                return 1
-
-        return 1
+            return int(respuesta.data[0][campo]) + 1
 
     except:
-        return 1
+        pass
 
+    return 1
+
+
+# ============================================================
+# CLIENTES
+# ============================================================
 
 def buscar_cliente(nombre):
+
     nombre = (nombre or "").strip()
 
     if not nombre:
         return None
 
-    respuesta = (
-        supabase
-        .table("clientes")
-        .select("*")
-        .ilike("nombre", nombre)
-        .limit(1)
-        .execute()
-    )
+    try:
 
-    if respuesta.data:
-        return respuesta.data[0]
+        respuesta = (
+            supabase
+            .table("clientes")
+            .select("*")
+            .ilike("nombre", nombre)
+            .limit(1)
+            .execute()
+        )
+
+        if respuesta.data:
+            return respuesta.data[0]
+
+    except:
+        pass
 
     return None
 
 
-def obtener_o_crear_cliente(nombre, telefono="", direccion=""):
+def obtener_o_crear_cliente(nombre):
+
     nombre = (nombre or "").strip()
 
     if not nombre:
-        raise Exception("Debes indicar el nombre del cliente.")
+        return None
 
     cliente = buscar_cliente(nombre)
 
@@ -97,41 +97,56 @@ def obtener_o_crear_cliente(nombre, telefono="", direccion=""):
         return cliente
 
     datos = {
-        "nombre": nombre,
-        "telefono": (telefono or "").strip(),
-        "direccion": (direccion or "").strip()
+        "nombre": nombre
     }
 
-    respuesta = (
-        supabase
-        .table("clientes")
-        .insert(datos)
-        .execute()
-    )
+    try:
 
-    if not respuesta.data:
-        raise Exception("No se pudo crear el cliente.")
+        respuesta = (
+            supabase
+            .table("clientes")
+            .insert(datos)
+            .execute()
+        )
 
-    return respuesta.data[0]
+        if respuesta.data:
+            return respuesta.data[0]
 
+    except Exception as e:
+        raise Exception(
+            f"No se pudo guardar el cliente: {e}"
+        )
+
+    return None
+
+
+# ============================================================
+# PRODUCTOS
+# ============================================================
 
 def buscar_producto(nombre):
+
     nombre = (nombre or "").strip()
 
     if not nombre:
         return None
 
-    respuesta = (
-        supabase
-        .table("productos")
-        .select("*")
-        .ilike("nombre", nombre)
-        .limit(1)
-        .execute()
-    )
+    try:
 
-    if respuesta.data:
-        return respuesta.data[0]
+        respuesta = (
+            supabase
+            .table("productos")
+            .select("*")
+            .ilike("nombre", nombre)
+            .limit(1)
+            .execute()
+        )
+
+        if respuesta.data:
+            return respuesta.data[0]
+
+    except:
+        pass
 
     return None
 
@@ -143,20 +158,18 @@ def obtener_o_crear_producto(
     precio=0,
     stock_minimo=0
 ):
+
     nombre = (nombre or "").strip()
 
     if not nombre:
-        raise Exception("Debes escribir el nombre del producto.")
+        raise Exception(
+            "Debes escribir el nombre del producto."
+        )
 
     producto = buscar_producto(nombre)
 
     if producto:
         return producto
-
-    tipo_venta = (tipo_venta or "unidad").strip().lower()
-
-    if tipo_venta not in ["metro", "kilo", "unidad"]:
-        tipo_venta = "unidad"
 
     try:
         precio = float(precio or 0)
@@ -168,26 +181,44 @@ def obtener_o_crear_producto(
     except:
         stock_minimo = 0
 
+    tipo_venta = (
+        tipo_venta or "unidad"
+    ).strip().lower()
+
+    if tipo_venta not in [
+        "unidad",
+        "metro",
+        "kilo"
+    ]:
+        tipo_venta = "unidad"
+
     datos = {
         "nombre": nombre,
-        "descripcion": (descripcion or "").strip(),
+        "descripcion": descripcion or "",
         "tipo_venta": tipo_venta,
         "precio": precio,
         "stock": 0,
         "stock_minimo": stock_minimo
     }
 
-    respuesta = (
-        supabase
-        .table("productos")
-        .insert(datos)
-        .execute()
-    )
+    try:
 
-    if not respuesta.data:
-        raise Exception("No se pudo crear el producto.")
+        respuesta = (
+            supabase
+            .table("productos")
+            .insert(datos)
+            .execute()
+        )
 
-    return respuesta.data[0]
+        if respuesta.data:
+            return respuesta.data[0]
+
+    except Exception as e:
+        raise Exception(
+            f"No se pudo guardar el producto: {e}"
+        )
+
+    return None
 
 
 # ============================================================
@@ -195,20 +226,84 @@ def obtener_o_crear_producto(
 # ============================================================
 
 def siguiente_numero_existencia(producto_id):
-    respuesta = (
-        supabase
-        .table("existencias_inventario")
-        .select("numero")
-        .eq("producto_id", producto_id)
-        .order("numero", desc=True)
-        .limit(1)
-        .execute()
-    )
 
-    if respuesta.data:
-        return int(respuesta.data[0]["numero"]) + 1
+    try:
+
+        respuesta = (
+            supabase
+            .table("existencias_inventario")
+            .select("numero")
+            .eq("producto_id", producto_id)
+            .order("numero", desc=True)
+            .limit(1)
+            .execute()
+        )
+
+        if respuesta.data:
+
+            return (
+                int(
+                    respuesta.data[0]["numero"]
+                ) + 1
+            )
+
+    except:
+        pass
 
     return 1
+
+
+def actualizar_stock_general(producto_id):
+
+    try:
+
+        respuesta = (
+            supabase
+            .table("existencias_inventario")
+            .select("cantidad_actual")
+            .eq("producto_id", producto_id)
+            .eq("estado", "disponible")
+            .execute()
+        )
+
+        total = 0
+
+        for existencia in (
+            respuesta.data or []
+        ):
+
+            try:
+
+                total += float(
+                    existencia.get(
+                        "cantidad_actual",
+                        0
+                    ) or 0
+                )
+
+            except:
+                pass
+
+        (
+            supabase
+            .table("productos")
+            .update({
+                "stock": total
+            })
+            .eq("id", producto_id)
+            .execute()
+        )
+
+        return total
+
+    except Exception as e:
+
+        print(
+            "Error actualizando stock:",
+            e
+        )
+
+        return 0
 
 
 def crear_existencias(
@@ -218,6 +313,7 @@ def crear_existencias(
     unidad,
     motivo="Entrada"
 ):
+
     try:
         cantidad_existencias = int(
             cantidad_existencias
@@ -232,19 +328,24 @@ def crear_existencias(
     except:
         cantidad_por_existencia = 0
 
-    unidad = (unidad or "").strip().lower()
+    unidad = (
+        unidad or ""
+    ).strip().lower()
 
     if not producto_id:
+
         raise Exception(
             "No se indicó el producto."
         )
 
     if cantidad_existencias <= 0:
+
         raise Exception(
             "La cantidad de existencias debe ser mayor a 0."
         )
 
     if cantidad_por_existencia <= 0:
+
         raise Exception(
             "La cantidad por existencia debe ser mayor a 0."
         )
@@ -254,6 +355,7 @@ def crear_existencias(
         "kilos",
         "unidad"
     ]:
+
         raise Exception(
             "La unidad debe ser METROS, KILOS o UNIDAD."
         )
@@ -264,42 +366,74 @@ def crear_existencias(
 
     creadas = []
 
-    for i in range(cantidad_existencias):
+    for i in range(
+        cantidad_existencias
+    ):
 
         datos = {
+
             "producto_id": producto_id,
-            "numero": numero + i,
-            "cantidad_inicial": cantidad_por_existencia,
-            "cantidad_actual": cantidad_por_existencia,
-            "unidad_contenido": unidad,
-            "estado": "disponible"
+
+            "numero":
+                numero + i,
+
+            "cantidad_inicial":
+                cantidad_por_existencia,
+
+            "cantidad_actual":
+                cantidad_por_existencia,
+
+            "unidad_contenido":
+                unidad,
+
+            "estado":
+                "disponible"
         }
 
         respuesta = (
             supabase
-            .table("existencias_inventario")
+            .table(
+                "existencias_inventario"
+            )
             .insert(datos)
             .execute()
         )
 
         if not respuesta.data:
+
             raise Exception(
                 "No se pudo crear una existencia."
             )
 
-        existencia = respuesta.data[0]
+        existencia = (
+            respuesta.data[0]
+        )
 
-        creadas.append(existencia)
+        creadas.append(
+            existencia
+        )
 
         (
             supabase
-            .table("movimientos_existencias")
+            .table(
+                "movimientos_existencias"
+            )
             .insert({
-                "existencia_id": existencia["id"],
-                "producto_id": producto_id,
-                "tipo": "ENTRADA",
-                "cantidad": cantidad_por_existencia,
-                "descripcion": motivo
+
+                "existencia_id":
+                    existencia["id"],
+
+                "producto_id":
+                    producto_id,
+
+                "tipo":
+                    "ENTRADA",
+
+                "cantidad":
+                    cantidad_por_existencia,
+
+                "descripcion":
+                    motivo
             })
             .execute()
         )
@@ -311,186 +445,208 @@ def crear_existencias(
     return creadas
 
 
-def obtener_existencias_producto(producto_id):
-    respuesta = (
-        supabase
-        .table("existencias_inventario")
-        .select("*")
-        .eq("producto_id", producto_id)
-        .order("numero")
-        .execute()
-    )
+def obtener_existencias_producto(
+    producto_id
+):
 
-    return respuesta.data or []
+    try:
 
-
-def actualizar_stock_general(producto_id):
-
-    existencias = obtener_existencias_producto(
-        producto_id
-    )
-
-    total = 0
-
-    for existencia in existencias:
-
-        try:
-            cantidad = float(
-                existencia.get(
-                    "cantidad_actual",
-                    0
-                ) or 0
+        respuesta = (
+            supabase
+            .table(
+                "existencias_inventario"
             )
-        except:
-            cantidad = 0
+            .select("*")
+            .eq(
+                "producto_id",
+                producto_id
+            )
+            .order(
+                "numero"
+            )
+            .execute()
+        )
 
-        total += cantidad
+        return respuesta.data or []
 
-    (
-        supabase
-        .table("productos")
-        .update({
-            "stock": total
-        })
-        .eq("id", producto_id)
-        .execute()
-    )
+    except:
 
-    return total
+        return []
 
 
 def stock_disponible(producto_id):
 
-    existencias = obtener_existencias_producto(
-        producto_id
+    existencias = (
+        obtener_existencias_producto(
+            producto_id
+        )
     )
 
     total = 0
 
     for existencia in existencias:
 
-        if existencia.get("estado") == "agotada":
+        estado = (
+            existencia.get(
+                "estado",
+                ""
+            ) or ""
+        ).lower()
+
+        if estado != "disponible":
             continue
 
         try:
-            cantidad = float(
+
+            total += float(
                 existencia.get(
                     "cantidad_actual",
                     0
                 ) or 0
             )
-        except:
-            cantidad = 0
 
-        total += cantidad
+        except:
+            pass
 
     return total
 
 
 def descontar_existencia(
     producto_id,
-    cantidad_necesaria,
-    numero_venta=""
+    cantidad,
+    numero_venta=None,
+    descripcion="Venta"
 ):
-    try:
-        cantidad_necesaria = float(
-            cantidad_necesaria
-        )
-    except:
-        cantidad_necesaria = 0
 
-    if cantidad_necesaria <= 0:
+    try:
+
+        cantidad = float(
+            cantidad
+        )
+
+    except:
+
+        raise Exception(
+            "Cantidad inválida."
+        )
+
+    if cantidad <= 0:
+
         return
 
     existencias = (
-        supabase
-        .table("existencias_inventario")
-        .select("*")
-        .eq("producto_id", producto_id)
-        .neq("estado", "agotada")
-        .order("numero")
-        .execute()
-        .data or []
+        obtener_existencias_producto(
+            producto_id
+        )
     )
 
-    disponible = 0
-
-    for existencia in existencias:
-
-        try:
-            disponible += float(
-                existencia.get(
-                    "cantidad_actual",
-                    0
-                ) or 0
-            )
-        except:
-            pass
-
-    if disponible < cantidad_necesaria:
-        raise Exception(
-            "No hay suficiente stock para realizar la venta."
-        )
-
-    restante = cantidad_necesaria
+    restante = cantidad
 
     for existencia in existencias:
 
         if restante <= 0:
             break
 
+        estado = (
+            existencia.get(
+                "estado",
+                ""
+            ) or ""
+        ).lower()
+
+        if estado != "disponible":
+            continue
+
         try:
+
             actual = float(
                 existencia.get(
                     "cantidad_actual",
                     0
                 ) or 0
             )
+
         except:
+
             actual = 0
 
         if actual <= 0:
+
             continue
 
-        descuento = min(
+        usar = min(
             actual,
             restante
         )
 
-        nuevo = actual - descuento
+        nuevo = actual - usar
 
         if nuevo <= 0:
+
             nuevo = 0
-            estado = "agotada"
+
+            nuevo_estado = "agotada"
+
         else:
-            estado = "disponible"
+
+            nuevo_estado = "disponible"
 
         (
             supabase
-            .table("existencias_inventario")
+            .table(
+                "existencias_inventario"
+            )
             .update({
-                "cantidad_actual": nuevo,
-                "estado": estado
+
+                "cantidad_actual":
+                    nuevo,
+
+                "estado":
+                    nuevo_estado
+
             })
-            .eq("id", existencia["id"])
+            .eq(
+                "id",
+                existencia["id"]
+            )
             .execute()
         )
 
         (
             supabase
-            .table("movimientos_existencias")
+            .table(
+                "movimientos_existencias"
+            )
             .insert({
-                "existencia_id": existencia["id"],
-                "producto_id": producto_id,
-                "tipo": "SALIDA",
-                "cantidad": descuento,
-                "numero_venta": numero_venta,
-                "descripcion": "Salida por venta"
+
+                "existencia_id":
+                    existencia["id"],
+
+                "producto_id":
+                    producto_id,
+
+                "tipo":
+                    "SALIDA",
+
+                "cantidad":
+                    usar,
+
+                "numero_venta":
+                    numero_venta,
+
+                "descripcion":
+                    descripcion
             })
             .execute()
         )
 
-        restante -= descuento
+        restante -= usar
+
+    if restante > 0:
+
+        raise Exception(
+            "No hay suficiente stock disponible."
+        )
 
     actualizar_stock_general(
         producto_id
@@ -498,13 +654,14 @@ def descontar_existencia(
 
 
 # ============================================================
-# INICIO
+# INICIO / DASHBOARD
 # ============================================================
 
 @app.route("/")
 def inicio():
 
     try:
+
         productos = (
             supabase
             .table("productos")
@@ -512,10 +669,13 @@ def inicio():
             .execute()
             .data or []
         )
+
     except:
+
         productos = []
 
     try:
+
         clientes = (
             supabase
             .table("clientes")
@@ -523,10 +683,13 @@ def inicio():
             .execute()
             .data or []
         )
+
     except:
+
         clientes = []
 
     try:
+
         cotizaciones = (
             supabase
             .table("cotizaciones")
@@ -534,14 +697,92 @@ def inicio():
             .execute()
             .data or []
         )
+
     except:
+
         cotizaciones = []
+
+    # ========================================================
+    # TOTALES DEL PANEL PRINCIPAL
+    # ========================================================
+
+    total_cotizado = 0
+    total_ventas = 0
+    ventas_hoy = 0
+
+    fecha_hoy = datetime.now().date()
+
+    for c in cotizaciones:
+
+        try:
+
+            total = float(
+                c.get(
+                    "total",
+                    0
+                ) or 0
+            )
+
+        except:
+
+            total = 0
+
+        estado = (
+            c.get(
+                "estado",
+                ""
+            ) or ""
+        ).lower()
+
+        # COTIZACIONES
+        if estado == "cotizacion":
+
+            total_cotizado += total
+
+        # VENTAS
+        if estado == "venta":
+
+            total_ventas += total
+
+            fecha = c.get(
+                "fecha"
+            )
+
+            if fecha:
+
+                try:
+
+                    fecha_texto = str(
+                        fecha
+                    )[:10]
+
+                    if fecha_texto == str(
+                        fecha_hoy
+                    ):
+
+                        ventas_hoy += total
+
+                except:
+
+                    pass
 
     return render_template(
         "index.html",
+
         productos=productos,
+
         clientes=clientes,
-        cotizaciones=cotizaciones
+
+        cotizaciones=cotizaciones,
+
+        total_cotizado=
+            total_cotizado,
+
+        total_ventas=
+            total_ventas,
+
+        ventas_hoy=
+            ventas_hoy
     )
 
 
@@ -580,20 +821,41 @@ def agregar_cliente():
             ""
         ).strip()
 
-        telefono = request.form.get(
-            "telefono",
-            ""
-        ).strip()
+        if not nombre:
 
-        direccion = request.form.get(
-            "direccion",
-            ""
-        ).strip()
+            raise Exception(
+                "Debes escribir el nombre."
+            )
 
-        obtener_o_crear_cliente(
-            nombre,
-            telefono,
-            direccion
+        datos = {
+
+            "nombre":
+                nombre,
+
+            "telefono":
+                request.form.get(
+                    "telefono",
+                    ""
+                ).strip(),
+
+            "direccion":
+                request.form.get(
+                    "direccion",
+                    ""
+                ).strip(),
+
+            "email":
+                request.form.get(
+                    "email",
+                    ""
+                ).strip()
+        }
+
+        (
+            supabase
+            .table("clientes")
+            .insert(datos)
+            .execute()
         )
 
         return redirect(
@@ -691,79 +953,63 @@ def agregar_producto():
             "0"
         )
 
+        producto = (
+            obtener_o_crear_producto(
+
+                nombre,
+
+                descripcion,
+
+                tipo_venta,
+
+                precio,
+
+                stock_minimo
+            )
+        )
+
+        # ====================================================
+        # INVENTARIO INICIAL OPCIONAL
+        # ====================================================
+
         cantidad_existencias = request.form.get(
             "cantidad_existencias",
-            "0"
-        )
+            ""
+        ).strip()
 
         cantidad_por_existencia = request.form.get(
             "cantidad_por_existencia",
-            "0"
-        )
+            ""
+        ).strip()
 
         unidad = request.form.get(
             "unidad",
-            "unidad"
+            ""
         ).strip().lower()
 
-        producto_existente = buscar_producto(
-            nombre
-        )
-
-        if producto_existente:
-
-            (
-                supabase
-                .table("productos")
-                .update({
-                    "descripcion": descripcion,
-                    "tipo_venta": tipo_venta,
-                    "precio": float(precio or 0),
-                    "stock_minimo": float(
-                        stock_minimo or 0
-                    )
-                })
-                .eq(
-                    "id",
-                    producto_existente["id"]
-                )
-                .execute()
-            )
-
-            producto = producto_existente
-
-        else:
-
-            producto = obtener_o_crear_producto(
-                nombre,
-                descripcion,
-                tipo_venta,
-                precio,
-                stock_minimo
-            )
-
-        try:
-            ce = int(
-                cantidad_existencias or 0
-            )
-        except:
-            ce = 0
-
-        try:
-            cpe = float(
-                cantidad_por_existencia or 0
-            )
-        except:
-            cpe = 0
-
-        if ce > 0 and cpe > 0:
+        if (
+            cantidad_existencias
+            and
+            cantidad_por_existencia
+            and
+            unidad
+        ):
 
             crear_existencias(
+
                 producto["id"],
-                ce,
-                cpe,
+
+                int(
+                    cantidad_existencias
+                ),
+
+                float(
+                    cantidad_por_existencia
+                ),
+
                 unidad,
-                "Entrada inicial"
+
+                "Inventario inicial"
             )
 
         return redirect(
@@ -786,30 +1032,40 @@ def eliminar_producto(id):
 
     try:
 
-        # Eliminamos movimientos
         (
             supabase
-            .table("movimientos_existencias")
+            .table(
+                "movimientos_existencias"
+            )
             .delete()
-            .eq("producto_id", id)
+            .eq(
+                "producto_id",
+                id
+            )
             .execute()
         )
 
-        # Eliminamos existencias
         (
             supabase
-            .table("existencias_inventario")
+            .table(
+                "existencias_inventario"
+            )
             .delete()
-            .eq("producto_id", id)
+            .eq(
+                "producto_id",
+                id
+            )
             .execute()
         )
 
-        # Finalmente eliminamos producto
         (
             supabase
             .table("productos")
             .delete()
-            .eq("id", id)
+            .eq(
+                "id",
+                id
+            )
             .execute()
         )
 
@@ -834,7 +1090,9 @@ def inventario():
 
     existencias = (
         supabase
-        .table("existencias_inventario")
+        .table(
+            "existencias_inventario"
+        )
         .select("*")
         .order("producto_id")
         .order("numero")
@@ -844,9 +1102,14 @@ def inventario():
 
     movimientos = (
         supabase
-        .table("movimientos_existencias")
+        .table(
+            "movimientos_existencias"
+        )
         .select("*")
-        .order("id", desc=True)
+        .order(
+            "id",
+            desc=True
+        )
         .limit(100)
         .execute()
         .data or []
@@ -862,46 +1125,71 @@ def inventario():
     )
 
     mapa_existencias = {
-        e["id"]: e["numero"]
+
+        e["id"]:
+            e["numero"]
+
         for e in existencias
     }
 
     mapa_productos = {
-        p["id"]: p["nombre"]
+
+        p["id"]:
+            p["nombre"]
+
         for p in productos
     }
 
     for existencia in existencias:
 
-        existencia["producto_nombre"] = (
-            mapa_productos.get(
-                existencia.get("producto_id"),
-                "Producto desconocido"
-            )
+        existencia[
+            "producto_nombre"
+        ] = mapa_productos.get(
+
+            existencia.get(
+                "producto_id"
+            ),
+
+            "Producto desconocido"
         )
 
     for movimiento in movimientos:
 
-        movimiento["existencia_numero"] = (
-            mapa_existencias.get(
-                movimiento.get("existencia_id")
+        movimiento[
+            "existencia_numero"
+        ] = mapa_existencias.get(
+
+            movimiento.get(
+                "existencia_id"
             )
         )
 
-        movimiento["producto_nombre"] = (
-            mapa_productos.get(
-                movimiento.get("producto_id"),
-                "Producto desconocido"
-            )
+        movimiento[
+            "producto_nombre"
+        ] = mapa_productos.get(
+
+            movimiento.get(
+                "producto_id"
+            ),
+
+            "Producto desconocido"
         )
 
     return render_template(
+
         "inventario.html",
+
         existencias=existencias,
+
         movimientos=movimientos,
+
         productos=productos
     )
 
+
+# ============================================================
+# ENTRADA DE INVENTARIO
+# ============================================================
 
 @app.route(
     "/entrada-inventario",
@@ -948,12 +1236,19 @@ def entrada_inventario():
 
         if not producto:
 
-            producto = obtener_o_crear_producto(
-                producto_nombre,
-                descripcion,
-                tipo_venta,
-                precio,
-                stock_minimo
+            producto = (
+                obtener_o_crear_producto(
+
+                    producto_nombre,
+
+                    descripcion,
+
+                    tipo_venta,
+
+                    precio,
+
+                    stock_minimo
+                )
             )
 
         cantidad_existencias = int(
@@ -974,10 +1269,15 @@ def entrada_inventario():
         ).strip().lower()
 
         crear_existencias(
+
             producto["id"],
+
             cantidad_existencias,
+
             cantidad_por_existencia,
+
             unidad,
+
             "Entrada de inventario"
         )
 
@@ -993,6 +1293,10 @@ def entrada_inventario():
         )
 
 
+# ============================================================
+# ELIMINAR EXISTENCIA
+# ============================================================
+
 @app.route(
     "/eliminar-existencia/<int:id>",
     methods=["POST"]
@@ -1003,9 +1307,14 @@ def eliminar_existencia(id):
 
         existencia = (
             supabase
-            .table("existencias_inventario")
+            .table(
+                "existencias_inventario"
+            )
             .select("*")
-            .eq("id", id)
+            .eq(
+                "id",
+                id
+            )
             .limit(1)
             .execute()
         )
@@ -1016,16 +1325,21 @@ def eliminar_existencia(id):
                 "La existencia no existe."
             )
 
-        existencia = existencia.data[0]
+        existencia = (
+            existencia.data[0]
+        )
 
-        producto_id = existencia[
-            "producto_id"
-        ]
+        producto_id = (
+            existencia[
+                "producto_id"
+            ]
+        )
 
-        # Primero eliminamos sus movimientos
         (
             supabase
-            .table("movimientos_existencias")
+            .table(
+                "movimientos_existencias"
+            )
             .delete()
             .eq(
                 "existencia_id",
@@ -1034,10 +1348,11 @@ def eliminar_existencia(id):
             .execute()
         )
 
-        # Después eliminamos la existencia
         (
             supabase
-            .table("existencias_inventario")
+            .table(
+                "existencias_inventario"
+            )
             .delete()
             .eq(
                 "id",
@@ -1046,7 +1361,6 @@ def eliminar_existencia(id):
             .execute()
         )
 
-        # Actualizamos el stock general
         actualizar_stock_general(
             producto_id
         )
@@ -1063,6 +1377,10 @@ def eliminar_existencia(id):
         )
 
 
+# ============================================================
+# ELIMINAR UN MOVIMIENTO
+# ============================================================
+
 @app.route(
     "/eliminar-movimiento/<int:id>",
     methods=["POST"]
@@ -1073,9 +1391,14 @@ def eliminar_movimiento(id):
 
         (
             supabase
-            .table("movimientos_existencias")
+            .table(
+                "movimientos_existencias"
+            )
             .delete()
-            .eq("id", id)
+            .eq(
+                "id",
+                id
+            )
             .execute()
         )
 
@@ -1091,6 +1414,10 @@ def eliminar_movimiento(id):
         )
 
 
+# ============================================================
+# LIMPIAR TODOS LOS MOVIMIENTOS
+# ============================================================
+
 @app.route(
     "/limpiar-movimientos",
     methods=["POST"]
@@ -1101,9 +1428,14 @@ def limpiar_movimientos():
 
         (
             supabase
-            .table("movimientos_existencias")
+            .table(
+                "movimientos_existencias"
+            )
             .delete()
-            .neq("id", 0)
+            .neq(
+                "id",
+                0
+            )
             .execute()
         )
 
@@ -1120,7 +1452,7 @@ def limpiar_movimientos():
 
 
 # ============================================================
-# COTIZACIONES
+# NUEVA COTIZACIÓN
 # ============================================================
 
 @app.route("/nueva-cotizacion")
@@ -1144,18 +1476,19 @@ def nueva_cotizacion():
         .data or []
     )
 
-    numero = numero_siguiente(
-        "cotizaciones",
-        "numero"
-    )
-
     return render_template(
+
         "nueva_cotizacion.html",
+
         clientes=clientes,
-        productos=productos,
-        numero=numero
+
+        productos=productos
     )
 
+
+# ============================================================
+# GUARDAR COTIZACIÓN
+# ============================================================
 
 @app.route(
     "/guardar-cotizacion",
@@ -1166,229 +1499,178 @@ def guardar_cotizacion():
     try:
 
         cliente_nombre = request.form.get(
-            "cliente",
+            "cliente_nombre",
             ""
         ).strip()
 
-        cliente_telefono = request.form.get(
-            "telefono",
-            ""
-        ).strip()
+        if not cliente_nombre:
 
-        cliente_direccion = request.form.get(
-            "direccion",
-            ""
-        ).strip()
+            raise Exception(
+                "Debes escribir el cliente."
+            )
 
-        tipo_documento = request.form.get(
-            "tipo_documento",
-            "COTIZACION"
-        ).strip().upper()
+        cliente = (
+            obtener_o_crear_cliente(
+                cliente_nombre
+            )
+        )
 
-        numero = request.form.get(
-            "numero",
-            ""
-        ).strip()
+        tipo = request.form.get(
+            "tipo",
+            "cotizacion"
+        ).strip().lower()
+
+        if tipo not in [
+            "cotizacion",
+            "venta"
+        ]:
+
+            tipo = "cotizacion"
 
         observaciones = request.form.get(
             "observaciones",
             ""
         ).strip()
 
-        cliente = obtener_o_crear_cliente(
-            cliente_nombre,
-            cliente_telefono,
-            cliente_direccion
+        detalle = request.form.get(
+            "detalle",
+            ""
+        ).strip()
+
+        total = request.form.get(
+            "total",
+            "0"
         )
 
-        productos_ids = request.form.getlist(
-            "producto_id"
+        try:
+
+            total = float(total)
+
+        except:
+
+            total = 0
+
+        numero = numero_siguiente(
+            "cotizaciones",
+            "numero"
         )
 
-        cantidades = request.form.getlist(
-            "cantidad"
-        )
+        datos = {
 
-        precios = request.form.getlist(
-            "precio"
-        )
+            "numero":
+                numero,
 
-        longitudes = request.form.getlist(
-            "longitud"
-        )
+            "cliente_id":
+                cliente["id"],
 
-        detalles = []
+            "tipo":
+                tipo,
 
-        total = 0
+            "estado":
+                "cotizacion"
+                if tipo == "cotizacion"
+                else "venta",
 
-        for i in range(
-            len(productos_ids)
-        ):
+            "total":
+                total,
 
-            producto_id = productos_ids[i]
+            "observaciones":
+                observaciones,
 
-            if not producto_id:
-                continue
+            "detalle":
+                detalle
+        }
 
-            producto = (
+        # ====================================================
+        # SOLO COTIZACIÓN
+        # ====================================================
+
+        if tipo == "cotizacion":
+
+            (
                 supabase
-                .table("productos")
-                .select("*")
-                .eq(
-                    "id",
-                    int(producto_id)
+                .table(
+                    "cotizaciones"
                 )
-                .limit(1)
+                .insert(datos)
                 .execute()
             )
 
-            if not producto.data:
-                continue
+            return redirect(
+                url_for("historial")
+            )
 
-            producto = producto.data[0]
+        # ====================================================
+        # VENTA DIRECTA
+        # ====================================================
+
+        # Si el formulario envía producto_id y cantidad,
+        # se puede descontar automáticamente.
+
+        producto_id = request.form.get(
+            "producto_id"
+        )
+
+        cantidad = request.form.get(
+            "cantidad"
+        )
+
+        if producto_id and cantidad:
 
             try:
+
                 cantidad = float(
-                    cantidades[i]
+                    cantidad
                 )
+
             except:
+
                 cantidad = 0
 
-            try:
-                precio = float(
-                    precios[i]
+            disponible = stock_disponible(
+                int(producto_id)
+            )
+
+            if disponible < cantidad:
+
+                raise Exception(
+                    "No hay suficiente stock para realizar la venta."
                 )
-            except:
-                precio = float(
-                    producto.get(
-                        "precio",
-                        0
-                    ) or 0
-                )
-
-            try:
-                longitud = float(
-                    longitudes[i]
-                )
-            except:
-                longitud = 1
-
-            tipo = (
-                producto.get(
-                    "tipo_venta",
-                    "unidad"
-                ) or "unidad"
-            ).lower()
-
-            if tipo == "metro":
-                subtotal = (
-                    cantidad
-                    * longitud
-                    * precio
-                )
-
-            else:
-                subtotal = (
-                    cantidad
-                    * precio
-                )
-
-            total += subtotal
-
-            detalles.append({
-                "producto_id": producto["id"],
-                "producto": producto["nombre"],
-                "cantidad": cantidad,
-                "longitud": longitud,
-                "precio": precio,
-                "subtotal": subtotal
-            })
-
-        estado = "cotizacion"
-
-        if tipo_documento == "VENTA":
-            estado = "venta"
-
-        datos = {
-            "numero": numero,
-            "cliente_id": cliente["id"],
-            "tipo": tipo_documento,
-            "estado": estado,
-            "total": total,
-            "observaciones": observaciones,
-            "detalle": detalles,
-            "fecha": datetime.now().isoformat()
-        }
 
         respuesta = (
             supabase
-            .table("cotizaciones")
+            .table(
+                "cotizaciones"
+            )
             .insert(datos)
             .execute()
         )
 
-        if not respuesta.data:
-            raise Exception(
-                "No se pudo guardar la cotización."
+        if respuesta.data:
+
+            venta = (
+                respuesta.data[0]
             )
 
-        cotizacion = respuesta.data[0]
-
-        # Si es venta, descontamos stock
-        if tipo_documento == "VENTA":
-
-            for detalle in detalles:
-
-                producto_id = detalle[
-                    "producto_id"
-                ]
-
-                producto = (
-                    supabase
-                    .table("productos")
-                    .select("*")
-                    .eq(
-                        "id",
-                        producto_id
-                    )
-                    .limit(1)
-                    .execute()
-                )
-
-                if not producto.data:
-                    continue
-
-                producto = producto.data[0]
-
-                tipo = (
-                    producto.get(
-                        "tipo_venta",
-                        "unidad"
-                    ) or "unidad"
-                ).lower()
-
-                cantidad_stock = (
-                    detalle["cantidad"]
-                )
-
-                if tipo == "metro":
-
-                    cantidad_stock = (
-                        detalle["cantidad"]
-                        * detalle["longitud"]
-                    )
+            if producto_id and cantidad:
 
                 descontar_existencia(
-                    producto_id,
-                    cantidad_stock,
-                    numero
+
+                    int(producto_id),
+
+                    float(cantidad),
+
+                    str(
+                        venta.get(
+                            "numero"
+                        )
+                    ),
+
+                    "Venta directa"
                 )
 
         return redirect(
-            url_for(
-                "cotizacion",
-                id=cotizacion["id"]
-            )
+            url_for("historial")
         )
 
     except Exception as e:
@@ -1410,7 +1692,10 @@ def historial():
         supabase
         .table("cotizaciones")
         .select("*")
-        .order("id", desc=True)
+        .order(
+            "id",
+            desc=True
+        )
         .execute()
         .data or []
     )
@@ -1424,21 +1709,30 @@ def historial():
     )
 
     mapa_clientes = {
-        c["id"]: c["nombre"]
+
+        c["id"]:
+            c["nombre"]
+
         for c in clientes
     }
 
-    for c in cotizaciones:
+    for cotizacion in cotizaciones:
 
-        c["cliente_nombre"] = (
-            mapa_clientes.get(
-                c.get("cliente_id"),
-                "Sin cliente"
-            )
+        cotizacion[
+            "cliente_nombre"
+        ] = mapa_clientes.get(
+
+            cotizacion.get(
+                "cliente_id"
+            ),
+
+            "Sin cliente"
         )
 
     return render_template(
+
         "historial.html",
+
         cotizaciones=cotizaciones
     )
 
@@ -1450,13 +1744,16 @@ def historial():
 @app.route(
     "/cotizacion/<int:id>"
 )
-def cotizacion(id):
+def ver_cotizacion(id):
 
     respuesta = (
         supabase
         .table("cotizaciones")
         .select("*")
-        .eq("id", id)
+        .eq(
+            "id",
+            id
+        )
         .limit(1)
         .execute()
     )
@@ -1468,11 +1765,15 @@ def cotizacion(id):
             404
         )
 
-    cotizacion = respuesta.data[0]
+    cotizacion = (
+        respuesta.data[0]
+    )
 
     cliente = None
 
-    if cotizacion.get("cliente_id"):
+    if cotizacion.get(
+        "cliente_id"
+    ):
 
         respuesta_cliente = (
             supabase
@@ -1480,18 +1781,26 @@ def cotizacion(id):
             .select("*")
             .eq(
                 "id",
-                cotizacion["cliente_id"]
+                cotizacion[
+                    "cliente_id"
+                ]
             )
             .limit(1)
             .execute()
         )
 
         if respuesta_cliente.data:
-            cliente = respuesta_cliente.data[0]
+
+            cliente = (
+                respuesta_cliente.data[0]
+            )
 
     return render_template(
+
         "cotizacion.html",
+
         cotizacion=cotizacion,
+
         cliente=cliente
     )
 
@@ -1512,7 +1821,10 @@ def eliminar_cotizacion(id):
             supabase
             .table("cotizaciones")
             .delete()
-            .eq("id", id)
+            .eq(
+                "id",
+                id
+            )
             .execute()
         )
 
@@ -1544,7 +1856,10 @@ def pasar_a_venta(id):
             supabase
             .table("cotizaciones")
             .select("*")
-            .eq("id", id)
+            .eq(
+                "id",
+                id
+            )
             .limit(1)
             .execute()
         )
@@ -1555,177 +1870,47 @@ def pasar_a_venta(id):
                 "La cotización no existe."
             )
 
-        cotizacion = respuesta.data[0]
+        cotizacion = (
+            respuesta.data[0]
+        )
 
-        estado_actual = (
+        estado = (
             cotizacion.get(
                 "estado",
                 ""
             ) or ""
         ).lower()
 
-        if estado_actual == "venta":
+        if estado == "venta":
 
             raise Exception(
                 "Esta cotización ya fue convertida en venta."
             )
 
-        detalles = (
-            cotizacion.get(
-                "detalle",
-                []
-            ) or []
+        # ====================================================
+        # DETALLE
+        # ====================================================
+
+        detalle = cotizacion.get(
+            "detalle",
+            ""
         )
 
-        if isinstance(detalles, str):
-            detalles = []
-
-        # ----------------------------------------------------
-        # Primero comprobamos todo el stock
-        # ----------------------------------------------------
-
-        for detalle in detalles:
-
-            producto_id = detalle.get(
-                "producto_id"
-            )
-
-            if not producto_id:
-                continue
-
-            producto = (
-                supabase
-                .table("productos")
-                .select("*")
-                .eq(
-                    "id",
-                    producto_id
-                )
-                .limit(1)
-                .execute()
-            )
-
-            if not producto.data:
-                continue
-
-            producto = producto.data[0]
-
-            tipo = (
-                producto.get(
-                    "tipo_venta",
-                    "unidad"
-                ) or "unidad"
-            ).lower()
-
-            cantidad = float(
-                detalle.get(
-                    "cantidad",
-                    0
-                ) or 0
-            )
-
-            longitud = float(
-                detalle.get(
-                    "longitud",
-                    1
-                ) or 1
-            )
-
-            cantidad_stock = cantidad
-
-            if tipo == "metro":
-
-                cantidad_stock = (
-                    cantidad
-                    * longitud
-                )
-
-            disponible = stock_disponible(
-                producto_id
-            )
-
-            if disponible < cantidad_stock:
-
-                raise Exception(
-                    "Stock insuficiente para "
-                    + producto["nombre"]
-                )
-
-        # ----------------------------------------------------
-        # Descontamos
-        # ----------------------------------------------------
-
-        for detalle in detalles:
-
-            producto_id = detalle.get(
-                "producto_id"
-            )
-
-            if not producto_id:
-                continue
-
-            producto = (
-                supabase
-                .table("productos")
-                .select("*")
-                .eq(
-                    "id",
-                    producto_id
-                )
-                .limit(1)
-                .execute()
-            )
-
-            if not producto.data:
-                continue
-
-            producto = producto.data[0]
-
-            tipo = (
-                producto.get(
-                    "tipo_venta",
-                    "unidad"
-                ) or "unidad"
-            ).lower()
-
-            cantidad = float(
-                detalle.get(
-                    "cantidad",
-                    0
-                ) or 0
-            )
-
-            longitud = float(
-                detalle.get(
-                    "longitud",
-                    1
-                ) or 1
-            )
-
-            cantidad_stock = cantidad
-
-            if tipo == "metro":
-
-                cantidad_stock = (
-                    cantidad
-                    * longitud
-                )
-
-            descontar_existencia(
-                producto_id,
-                cantidad_stock,
-                cotizacion.get(
-                    "numero",
-                    ""
-                )
-            )
+        # ====================================================
+        # ACTUALIZAR ESTADO
+        # ====================================================
 
         (
             supabase
             .table("cotizaciones")
             .update({
-                "estado": "venta",
-                "tipo": "VENTA"
+
+                "estado":
+                    "venta",
+
+                "tipo":
+                    "venta"
+
             })
             .eq(
                 "id",
@@ -1735,16 +1920,13 @@ def pasar_a_venta(id):
         )
 
         return redirect(
-            url_for(
-                "cotizacion",
-                id=id
-            )
+            url_for("historial")
         )
 
     except Exception as e:
 
         return (
-            f"Error al convertir a venta: {e}",
+            f"Error al pasar a venta: {e}",
             500
         )
 
@@ -1756,19 +1938,56 @@ def pasar_a_venta(id):
 @app.route("/ventas")
 def ventas():
 
-    ventas = (
+    ventas_lista = (
         supabase
         .table("cotizaciones")
         .select("*")
-        .eq("estado", "venta")
-        .order("id", desc=True)
+        .eq(
+            "estado",
+            "venta"
+        )
+        .order(
+            "id",
+            desc=True
+        )
         .execute()
         .data or []
     )
 
+    clientes = (
+        supabase
+        .table("clientes")
+        .select("*")
+        .execute()
+        .data or []
+    )
+
+    mapa_clientes = {
+
+        c["id"]:
+            c["nombre"]
+
+        for c in clientes
+    }
+
+    for venta in ventas_lista:
+
+        venta[
+            "cliente_nombre"
+        ] = mapa_clientes.get(
+
+            venta.get(
+                "cliente_id"
+            ),
+
+            "Sin cliente"
+        )
+
     return render_template(
+
         "ventas.html",
-        ventas=ventas
+
+        ventas=ventas_lista
     )
 
 
@@ -1779,33 +1998,45 @@ def ventas():
 @app.route("/caja")
 def caja():
 
-    ventas = (
+    ventas_lista = (
         supabase
         .table("cotizaciones")
         .select("*")
-        .eq("estado", "venta")
-        .order("id", desc=True)
+        .eq(
+            "estado",
+            "venta"
+        )
+        .order(
+            "id",
+            desc=True
+        )
         .execute()
         .data or []
     )
 
     total = 0
 
-    for venta in ventas:
+    for venta in ventas_lista:
 
         try:
+
             total += float(
                 venta.get(
                     "total",
                     0
                 ) or 0
             )
+
         except:
+
             pass
 
     return render_template(
+
         "caja.html",
-        ventas=ventas,
+
+        ventas=ventas_lista,
+
         total=total
     )
 
@@ -1817,99 +2048,88 @@ def caja():
 @app.route("/reportes")
 def reportes():
 
-    productos = (
-        supabase
-        .table("productos")
-        .select("*")
-        .order("nombre")
-        .execute()
-        .data or []
-    )
-
-    ventas = (
-        supabase
-        .table("cotizaciones")
-        .select("*")
-        .eq("estado", "venta")
-        .order("id", desc=True)
-        .execute()
-        .data or []
-    )
-
     cotizaciones = (
         supabase
         .table("cotizaciones")
         .select("*")
-        .eq("estado", "cotizacion")
-        .order("id", desc=True)
         .execute()
         .data or []
     )
 
+    total_cotizaciones = 0
     total_ventas = 0
 
-    for venta in ventas:
+    cantidad_cotizaciones = 0
+    cantidad_ventas = 0
+
+    for c in cotizaciones:
 
         try:
-            total_ventas += float(
-                venta.get(
+
+            total = float(
+                c.get(
                     "total",
                     0
                 ) or 0
             )
-        except:
-            pass
-
-    stock_bajo = []
-
-    for producto in productos:
-
-        try:
-            stock = float(
-                producto.get(
-                    "stock",
-                    0
-                ) or 0
-            )
-
-            minimo = float(
-                producto.get(
-                    "stock_minimo",
-                    0
-                ) or 0
-            )
-
-            if stock <= minimo:
-                stock_bajo.append(
-                    producto
-                )
 
         except:
-            pass
+
+            total = 0
+
+        estado = (
+            c.get(
+                "estado",
+                ""
+            ) or ""
+        ).lower()
+
+        if estado == "cotizacion":
+
+            total_cotizaciones += total
+
+            cantidad_cotizaciones += 1
+
+        elif estado == "venta":
+
+            total_ventas += total
+
+            cantidad_ventas += 1
 
     return render_template(
+
         "reportes.html",
-        productos=productos,
-        ventas=ventas,
-        cotizaciones=cotizaciones,
-        total_ventas=total_ventas,
-        stock_bajo=stock_bajo
+
+        total_cotizaciones=
+            total_cotizaciones,
+
+        total_ventas=
+            total_ventas,
+
+        cantidad_cotizaciones=
+            cantidad_cotizaciones,
+
+        cantidad_ventas=
+            cantidad_ventas
     )
 
 
 # ============================================================
-# EJECUCIÓN LOCAL
+# EJECUTAR
 # ============================================================
 
 if __name__ == "__main__":
 
     app.run(
+
         host="0.0.0.0",
+
         port=int(
             os.getenv(
                 "PORT",
                 5000
             )
         ),
+
         debug=True
     )
