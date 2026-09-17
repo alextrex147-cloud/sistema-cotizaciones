@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Reportes</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body>
+
+<header>
+<h1>REPORTES</h1>
+</header>
+
+<nav>
+<a href="{{ url_for('inicio') }}">🏠 Inicio</a>
+<a href="{{ url_for('ventas') }}">💰 Ventas</a>
+<a href="{{ url_for('inventario') }}">📦 Inventario</a>
+</nav>
+
+<main>
+
+<div class="dashboard">
+
+<div class="card">
+
+<h3>Ventas</h3>
+
+<strong>{{ ventas|length }}</strong>
+
+</div>
+
+<div class="card">
+
+<h3>Total vendido</h3>
+
+<strong>{{ "%.2f"|format(total_ventas) }} Bs</strong>
+
+</div>
+
+<div class="card">
+
+<h3>Cotizaciones</h3>
+
+<strong>{{ cotizaciones|length }}</strong>
+
+</div>
+
+<div class="card">
+
+<h3>Total cotizado</h3>
+
+<strong>{{ "%.2f"|format(total_cotizaciones) }} Bs</strong>
+
+</div>
+
+</div>
+
+<section class="panel">
+
+<h2>Productos</h2>
+
+<table>
+
+<tr>
+<th>Producto</th>
+<th>Stock</th>
+<th>Tipo</th>
+</tr>
+
+{% for p in productos %}
+
+<tr>
+
+<td>{{ p.nombre }}</td>
+<td>{{ p.stock }}</td>
+<td>{{ p.tipo_venta }}</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+</section>
+
+</main>
+
+</body>
+
+</html>
