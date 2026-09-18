@@ -51,18 +51,12 @@
             <h2>👤 CLIENTE</h2>
 
             <p>
-                <strong>
-                    Nombre:
-                </strong>
-
+                <strong>Nombre:</strong>
                 {{ cliente_actual.nombre or "Sin cliente" }}
             </p>
 
             <p>
-                <strong>
-                    Teléfono:
-                </strong>
-
+                <strong>Teléfono:</strong>
                 {{ cliente_actual.telefono or "" }}
             </p>
 
@@ -76,14 +70,12 @@
                 <thead>
 
                     <tr>
-
                         <th>PRODUCTO</th>
                         <th>CANTIDAD</th>
                         <th>TIPO</th>
                         <th>MEDIDA</th>
                         <th>PRECIO</th>
                         <th>TOTAL</th>
-
                     </tr>
 
                 </thead>
@@ -130,9 +122,7 @@
             <div class="total-final">
 
                 TOTAL:
-
                 {{ "%.2f"|format(documento.total|float) }}
-
                 Bs
 
             </div>
@@ -285,28 +275,12 @@
                     Producto
                 </label>
 
-                <select id="producto_select">
-
-                    <option value="">
-                        Seleccionar producto
-                    </option>
-
-                {% for p in productos %}
-
-                    <option
-                        value="{{ p.id }}"
-                        data-nombre="{{ p.nombre }}"
-                        data-precio="{{ p.precio }}"
-                        data-unidad="{{ p.unidad }}"
-                    >
-
-                        {{ p.nombre }}
-
-                    </option>
-
-                {% endfor %}
-
-                </select>
+                <input
+                    type="text"
+                    id="nombre_producto"
+                    placeholder="Escribe el producto"
+                    autocomplete="off"
+                >
 
             </div>
 
@@ -381,20 +355,12 @@
                     id="precio"
                     min="0"
                     step="0.01"
+                    placeholder="0.00"
                 >
 
             </div>
 
         </div>
-
-
-        <button
-            type="button"
-            class="btn principal"
-            onclick="agregarProducto()"
-        >
-            ➕ AGREGAR PRODUCTO
-        </button>
 
 
         <div class="tabla-contenedor">
@@ -458,6 +424,7 @@
                 🧾 GUARDAR COMO COTIZACIÓN
             </button>
 
+
             {% if modo == "nueva" %}
 
                 <button
@@ -519,9 +486,12 @@
 
 
 {% endif %}
+
+
 <script>
 
 const detallesIniciales = {{ detalles | tojson }};
 
 </script>
+
 {% endblock %}
