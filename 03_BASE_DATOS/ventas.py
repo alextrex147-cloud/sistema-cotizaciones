@@ -1,8 +1,11 @@
-from .conexion import supabase
+from conexion import supabase
 
 
 def siguiente_numero():
-    respuesta = supabase.table("ventas").select(
+
+    respuesta = supabase.table(
+        "ventas"
+    ).select(
         "numero"
     ).order(
         "id",
@@ -15,7 +18,9 @@ def siguiente_numero():
     ultimo = respuesta.data[0]["numero"]
 
     try:
-        numero = int(ultimo.split("-")[1]) + 1
+        numero = int(
+            ultimo.split("-")[1]
+        ) + 1
     except Exception:
         numero = 1
 
@@ -23,7 +28,10 @@ def siguiente_numero():
 
 
 def listar_ventas():
-    respuesta = supabase.table("ventas").select(
+
+    respuesta = supabase.table(
+        "ventas"
+    ).select(
         "*, clientes(nombre, telefono)"
     ).order(
         "id",
@@ -33,8 +41,13 @@ def listar_ventas():
     return respuesta.data or []
 
 
-def obtener_venta(venta_id):
-    venta = supabase.table("ventas").select(
+def obtener_venta(
+    venta_id
+):
+
+    venta = supabase.table(
+        "ventas"
+    ).select(
         "*, clientes(nombre, telefono)"
     ).eq(
         "id",
@@ -50,13 +63,23 @@ def obtener_venta(venta_id):
         "id"
     ).execute()
 
-    return venta.data, detalles.data or []
+    return (
+        venta.data,
+        detalles.data or []
+    )
 
 
-def crear_venta(cliente_id, items, total):
+def crear_venta(
+    cliente_id,
+    items,
+    total
+):
+
     numero = siguiente_numero()
 
-    cabecera = supabase.table("ventas").insert({
+    cabecera = supabase.table(
+        "ventas"
+    ).insert({
         "numero": numero,
         "cliente_id": cliente_id,
         "total": total
@@ -67,27 +90,54 @@ def crear_venta(cliente_id, items, total):
     detalles = []
 
     for item in items:
+
         detalles.append({
-            "venta_id": venta["id"],
-            "producto_id": item.get("producto_id"),
-            "nombre_producto": item["nombre_producto"],
-            "cantidad": item["cantidad"],
-            "tipo": item["tipo"],
-            "medida": item.get("medida"),
-            "precio": item["precio"],
-            "total": item["total"]
+            "venta_id":
+                venta["id"],
+
+            "producto_id":
+                item.get("producto_id"),
+
+            "nombre_producto":
+                item["nombre_producto"],
+
+            "cantidad":
+                item["cantidad"],
+
+            "tipo":
+                item["tipo"],
+
+            "medida":
+                item.get("medida"),
+
+            "precio":
+                item["precio"],
+
+            "total":
+                item["total"]
         })
 
     if detalles:
+
         supabase.table(
             "venta_productos"
-        ).insert(detalles).execute()
+        ).insert(
+            detalles
+        ).execute()
 
     return venta
 
 
-def actualizar_venta(venta_id, cliente_id, items, total):
-    supabase.table("ventas").update({
+def actualizar_venta(
+    venta_id,
+    cliente_id,
+    items,
+    total
+):
+
+    supabase.table(
+        "ventas"
+    ).update({
         "cliente_id": cliente_id,
         "total": total
     }).eq(
@@ -95,7 +145,9 @@ def actualizar_venta(venta_id, cliente_id, items, total):
         venta_id
     ).execute()
 
-    supabase.table("venta_productos").delete().eq(
+    supabase.table(
+        "venta_productos"
+    ).delete().eq(
         "venta_id",
         venta_id
     ).execute()
@@ -103,34 +155,61 @@ def actualizar_venta(venta_id, cliente_id, items, total):
     detalles = []
 
     for item in items:
+
         detalles.append({
-            "venta_id": venta_id,
-            "producto_id": item.get("producto_id"),
-            "nombre_producto": item["nombre_producto"],
-            "cantidad": item["cantidad"],
-            "tipo": item["tipo"],
-            "medida": item.get("medida"),
-            "precio": item["precio"],
-            "total": item["total"]
+            "venta_id":
+                venta_id,
+
+            "producto_id":
+                item.get("producto_id"),
+
+            "nombre_producto":
+                item["nombre_producto"],
+
+            "cantidad":
+                item["cantidad"],
+
+            "tipo":
+                item["tipo"],
+
+            "medida":
+                item.get("medida"),
+
+            "precio":
+                item["precio"],
+
+            "total":
+                item["total"]
         })
 
     if detalles:
+
         supabase.table(
             "venta_productos"
-        ).insert(detalles).execute()
+        ).insert(
+            detalles
+        ).execute()
 
 
-def eliminar_venta(venta_id):
-    return supabase.table("ventas").delete().eq(
+def eliminar_venta(
+    venta_id
+):
+
+    return supabase.table(
+        "ventas"
+    ).delete().eq(
         "id",
         venta_id
     ).execute()
 
 
-def convertir_cotizacion(cotizacion_id):
-    cotizacion = supabase.table("cotizaciones").select(
-        "*"
-    ).eq(
+def convertir_cotizacion(
+    cotizacion_id
+):
+
+    cotizacion = supabase.table(
+        "cotizaciones"
+    ).select("*").eq(
         "id",
         cotizacion_id
     ).single().execute().data
@@ -144,29 +223,52 @@ def convertir_cotizacion(cotizacion_id):
 
     numero = siguiente_numero()
 
-    venta = supabase.table("ventas").insert({
+    venta = supabase.table(
+        "ventas"
+    ).insert({
         "numero": numero,
-        "cliente_id": cotizacion["cliente_id"],
-        "total": cotizacion["total"]
+        "cliente_id":
+            cotizacion["cliente_id"],
+        "total":
+            cotizacion["total"]
     }).execute().data[0]
 
     nuevos = []
 
     for item in detalles:
+
         nuevos.append({
-            "venta_id": venta["id"],
-            "producto_id": item["producto_id"],
-            "nombre_producto": item["nombre_producto"],
-            "cantidad": item["cantidad"],
-            "tipo": item["tipo"],
-            "medida": item["medida"],
-            "precio": item["precio"],
-            "total": item["total"]
+            "venta_id":
+                venta["id"],
+
+            "producto_id":
+                item["producto_id"],
+
+            "nombre_producto":
+                item["nombre_producto"],
+
+            "cantidad":
+                item["cantidad"],
+
+            "tipo":
+                item["tipo"],
+
+            "medida":
+                item["medida"],
+
+            "precio":
+                item["precio"],
+
+            "total":
+                item["total"]
         })
 
     if nuevos:
+
         supabase.table(
             "venta_productos"
-        ).insert(nuevos).execute()
+        ).insert(
+            nuevos
+        ).execute()
 
     return venta
