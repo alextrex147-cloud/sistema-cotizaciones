@@ -1,14 +1,17 @@
 let items = [];
 
+
 document.addEventListener(
     "DOMContentLoaded",
     function () {
 
-        const tipo = document.getElementById("tipo");
+        const tipo =
+            document.getElementById("tipo");
 
         if (tipo) {
             actualizarTipo();
         }
+
 
         const cliente =
             document.getElementById(
@@ -20,6 +23,7 @@ document.addEventListener(
                 "cliente_telefono"
             );
 
+
         if (cliente) {
 
             cliente.addEventListener(
@@ -30,6 +34,7 @@ document.addEventListener(
                         document.querySelectorAll(
                             "#lista_clientes option"
                         );
+
 
                     for (const opcion of opciones) {
 
@@ -45,11 +50,15 @@ document.addEventListener(
                             break;
                         }
                     }
+
                 }
             );
+
         }
 
+
         cargarItemsExistentes();
+
     }
 );
 
@@ -61,19 +70,23 @@ function actualizarTipo() {
             "tipo"
         );
 
+
     const campo =
         document.getElementById(
             "campo-medida"
         );
+
 
     const texto =
         document.getElementById(
             "texto-medida"
         );
 
+
     if (!tipo || !campo) {
         return;
     }
+
 
     if (tipo.value === "normal") {
 
@@ -83,9 +96,9 @@ function actualizarTipo() {
 
         campo.style.display = "block";
 
+
         if (
-            tipo.value ===
-            "metros"
+            tipo.value === "metros"
         ) {
 
             texto.textContent =
@@ -95,8 +108,11 @@ function actualizarTipo() {
 
             texto.textContent =
                 "Kilos por producto";
+
         }
+
     }
+
 }
 
 
@@ -110,67 +126,71 @@ document.addEventListener(
         ) {
 
             actualizarTipo();
+
         }
+
     }
 );
 
 
 function agregarProducto() {
 
-    const select =
+    const nombre =
         document.getElementById(
-            "producto_select"
+            "nombre_producto"
         );
 
-    const opcion =
-        select.options[
-            select.selectedIndex
-        ];
 
-    if (!opcion || !opcion.value) {
+    const cantidadInput =
+        document.getElementById(
+            "cantidad"
+        );
+
+
+    const tipoInput =
+        document.getElementById(
+            "tipo"
+        );
+
+
+    const medidaInput =
+        document.getElementById(
+            "medida"
+        );
+
+
+    const precioInput =
+        document.getElementById(
+            "precio"
+        );
+
+
+    if (!nombre) {
+        return;
+    }
+
+
+    const nombreProducto =
+        nombre.value.trim();
+
+
+    if (!nombreProducto) {
 
         alert(
-            "Selecciona un producto."
+            "Escribe el nombre del producto."
         );
+
+        nombre.focus();
 
         return;
     }
 
+
     const cantidad =
         parseFloat(
-            document.getElementById(
-                "cantidad"
-            ).value
+            cantidadInput.value
         ) || 0;
 
-    const tipo =
-        document.getElementById(
-            "tipo"
-        ).value;
-
-    const medida =
-        parseFloat(
-            document.getElementById(
-                "medida"
-            ).value
-        ) || 1;
-
-    let precio =
-        parseFloat(
-            document.getElementById(
-                "precio"
-            ).value
-        );
-
-    if (
-        Number.isNaN(precio)
-    ) {
-
-        precio =
-            parseFloat(
-                opcion.dataset.precio
-            ) || 0;
-    }
 
     if (cantidad <= 0) {
 
@@ -178,10 +198,45 @@ function agregarProducto() {
             "La cantidad debe ser mayor que 0."
         );
 
+        cantidadInput.focus();
+
         return;
     }
 
+
+    const tipo =
+        tipoInput.value;
+
+
+    const medida =
+        parseFloat(
+            medidaInput.value
+        ) || 1;
+
+
+    const precio =
+        parseFloat(
+            precioInput.value
+        );
+
+
+    if (
+        Number.isNaN(precio) ||
+        precio < 0
+    ) {
+
+        alert(
+            "Escribe un precio válido."
+        );
+
+        precioInput.focus();
+
+        return;
+    }
+
+
     let total;
+
 
     if (
         tipo === "metros" ||
@@ -198,15 +253,16 @@ function agregarProducto() {
         total =
             cantidad *
             precio;
+
     }
+
 
     items.push({
 
-        producto_id:
-            parseInt(opcion.value),
+        producto_id: null,
 
         nombre_producto:
-            opcion.dataset.nombre,
+            nombreProducto,
 
         cantidad:
             cantidad,
@@ -226,23 +282,24 @@ function agregarProducto() {
             Number(
                 total.toFixed(2)
             )
+
     });
+
 
     mostrarItems();
 
-    select.value = "";
 
-    document.getElementById(
-        "cantidad"
-    ).value = 1;
+    nombre.value = "";
 
-    document.getElementById(
-        "precio"
-    ).value = "";
+    cantidadInput.value = 1;
 
-    document.getElementById(
-        "medida"
-    ).value = 1;
+    precioInput.value = "";
+
+    medidaInput.value = 1;
+
+
+    nombre.focus();
+
 }
 
 
@@ -253,13 +310,17 @@ function mostrarItems() {
             "items-body"
         );
 
+
     if (!body) {
         return;
     }
 
+
     body.innerHTML = "";
 
+
     let totalGeneral = 0;
+
 
     items.forEach(
         function (item, index) {
@@ -267,10 +328,12 @@ function mostrarItems() {
             totalGeneral +=
                 Number(item.total);
 
+
             const fila =
                 document.createElement(
                     "tr"
                 );
+
 
             fila.innerHTML = `
 
@@ -285,7 +348,9 @@ function mostrarItems() {
                 </td>
 
                 <td>
-                    ${item.tipo}
+                    ${escapeHtml(
+                        item.tipo
+                    )}
                 </td>
 
                 <td>
@@ -319,26 +384,34 @@ function mostrarItems() {
                     </button>
 
                 </td>
+
             `;
+
 
             body.appendChild(
                 fila
             );
+
         }
     );
+
 
     const total =
         document.getElementById(
             "total-general"
         );
 
+
     if (total) {
 
         total.textContent =
             totalGeneral.toFixed(2);
+
     }
 
+
     prepararFormulario();
+
 }
 
 
@@ -349,7 +422,9 @@ function eliminarItem(index) {
         1
     );
 
+
     mostrarItems();
+
 }
 
 
@@ -360,11 +435,14 @@ function prepararFormulario() {
             "items_json"
         );
 
+
     if (campo) {
 
         campo.value =
             JSON.stringify(items);
+
     }
+
 }
 
 
@@ -377,7 +455,12 @@ function guardarComoVenta() {
         );
 
         return;
+
     }
+
+
+    prepararFormulario();
+
 
     document.getElementById(
         "venta_cliente_nombre"
@@ -386,6 +469,7 @@ function guardarComoVenta() {
             "cliente_nombre"
         ).value;
 
+
     document.getElementById(
         "venta_cliente_telefono"
     ).value =
@@ -393,14 +477,17 @@ function guardarComoVenta() {
             "cliente_telefono"
         ).value;
 
+
     document.getElementById(
         "venta_items_json"
     ).value =
         JSON.stringify(items);
 
+
     document.getElementById(
         "form-venta-oculto"
     ).submit();
+
 }
 
 
@@ -412,7 +499,9 @@ function cargarItemsExistentes() {
     ) {
 
         return;
+
     }
+
 
     if (
         !Array.isArray(
@@ -421,7 +510,9 @@ function cargarItemsExistentes() {
     ) {
 
         return;
+
     }
+
 
     items =
         detallesIniciales.map(
@@ -430,7 +521,7 @@ function cargarItemsExistentes() {
                 return {
 
                     producto_id:
-                        item.producto_id,
+                        null,
 
                     nombre_producto:
                         item.nombre_producto,
@@ -444,7 +535,8 @@ function cargarItemsExistentes() {
                         item.tipo,
 
                     medida:
-                        item.medida === null
+                        item.medida === null ||
+                        item.medida === undefined
                             ? null
                             : Number(
                                 item.medida
@@ -459,11 +551,15 @@ function cargarItemsExistentes() {
                         Number(
                             item.total
                         )
+
                 };
+
             }
         );
 
+
     mostrarItems();
+
 }
 
 
@@ -474,8 +570,11 @@ function escapeHtml(text) {
             "div"
         );
 
+
     div.textContent =
         text;
 
+
     return div.innerHTML;
+
 }
