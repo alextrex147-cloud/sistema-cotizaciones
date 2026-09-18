@@ -1,15 +1,24 @@
 let items = [];
 
 
+/* =========================================================
+   INICIO
+   ========================================================= */
+
 document.addEventListener(
     "DOMContentLoaded",
     function () {
 
         const tipo =
-            document.getElementById("tipo");
+            document.getElementById(
+                "tipo"
+            );
+
 
         if (tipo) {
+
             actualizarTipo();
+
         }
 
 
@@ -17,6 +26,7 @@ document.addEventListener(
             document.getElementById(
                 "cliente_nombre"
             );
+
 
         const telefono =
             document.getElementById(
@@ -35,6 +45,7 @@ document.addEventListener(
                             "#lista_clientes option"
                         );
 
+
                     for (
                         const opcion
                         of opciones
@@ -45,15 +56,24 @@ document.addEventListener(
                             cliente.value
                         ) {
 
-                            telefono.value =
-                                opcion.dataset
-                                    .telefono || "";
+                            if (telefono) {
+
+                                telefono.value =
+                                    opcion.dataset
+                                        .telefono ||
+                                    "";
+
+                            }
 
                             break;
+
                         }
+
                     }
+
                 }
             );
+
         }
 
 
@@ -70,26 +90,31 @@ document.addEventListener(
                 function (e) {
 
                     if (
-                        e.key === "Enter"
+                        e.key ===
+                        "Enter"
                     ) {
 
                         e.preventDefault();
 
                         agregarProducto();
+
                     }
+
                 }
             );
+
         }
 
 
         cargarItemsExistentes();
+
     }
 );
 
 
-// =========================================================
-// TIPO
-// =========================================================
+/* =========================================================
+   ACTUALIZAR TIPO
+   ========================================================= */
 
 function actualizarTipo() {
 
@@ -98,15 +123,18 @@ function actualizarTipo() {
             "tipo"
         );
 
+
     const campo =
         document.getElementById(
             "campo-medida"
         );
 
+
     const texto =
         document.getElementById(
             "texto-medida"
         );
+
 
     const medida =
         document.getElementById(
@@ -120,6 +148,7 @@ function actualizarTipo() {
     ) {
 
         return;
+
     }
 
 
@@ -131,12 +160,17 @@ function actualizarTipo() {
         campo.style.display =
             "none";
 
+
         if (medida) {
 
-            medida.value = "";
+            medida.value =
+                "";
+
         }
 
+
         return;
+
     }
 
 
@@ -149,11 +183,21 @@ function actualizarTipo() {
         "metros"
     ) {
 
-        texto.textContent =
-            "Metros por producto";
+        if (texto) {
 
-        medida.placeholder =
-            "Ejemplo: 4";
+            texto.textContent =
+                "Metros por producto";
+
+        }
+
+
+        if (medida) {
+
+            medida.placeholder =
+                "Ejemplo: 4";
+
+        }
+
     }
 
 
@@ -162,14 +206,29 @@ function actualizarTipo() {
         "kilos"
     ) {
 
-        texto.textContent =
-            "Kilos por producto";
+        if (texto) {
 
-        medida.placeholder =
-            "Ejemplo: 10";
+            texto.textContent =
+                "Kilos por producto";
+
+        }
+
+
+        if (medida) {
+
+            medida.placeholder =
+                "Ejemplo: 10";
+
+        }
+
     }
+
 }
 
+
+/* =========================================================
+   CAMBIO DE TIPO
+   ========================================================= */
 
 document.addEventListener(
     "change",
@@ -182,14 +241,16 @@ document.addEventListener(
         ) {
 
             actualizarTipo();
+
         }
+
     }
 );
 
 
-// =========================================================
-// AGREGAR PRODUCTO
-// =========================================================
+/* =========================================================
+   AGREGAR PRODUCTO
+   ========================================================= */
 
 function agregarProducto() {
 
@@ -198,20 +259,24 @@ function agregarProducto() {
             "nombre_producto"
         );
 
+
     const cantidadCampo =
         document.getElementById(
             "cantidad"
         );
+
 
     const tipoCampo =
         document.getElementById(
             "tipo"
         );
 
+
     const medidaCampo =
         document.getElementById(
             "medida"
         );
+
 
     const precioCampo =
         document.getElementById(
@@ -225,7 +290,9 @@ function agregarProducto() {
             "No se encontró el campo Producto."
         );
 
+
         return false;
+
     }
 
 
@@ -258,14 +325,19 @@ function agregarProducto() {
             "Escribe el nombre del producto."
         );
 
+
         nombreCampo.focus();
 
+
         return false;
+
     }
 
 
     if (
-        Number.isNaN(cantidad) ||
+        Number.isNaN(
+            cantidad
+        ) ||
         cantidad <= 0
     ) {
 
@@ -273,14 +345,19 @@ function agregarProducto() {
             "La cantidad debe ser mayor que 0."
         );
 
+
         cantidadCampo.focus();
 
+
         return false;
+
     }
 
 
     if (
-        Number.isNaN(precio) ||
+        Number.isNaN(
+            precio
+        ) ||
         precio < 0
     ) {
 
@@ -288,9 +365,12 @@ function agregarProducto() {
             "Escribe el precio."
         );
 
+
         precioCampo.focus();
 
+
         return false;
+
     }
 
 
@@ -306,12 +386,15 @@ function agregarProducto() {
 
 
         if (
-            Number.isNaN(medida) ||
+            Number.isNaN(
+                medida
+            ) ||
             medida <= 0
         ) {
 
             if (
-                tipo === "metros"
+                tipo ===
+                "metros"
             ) {
 
                 alert(
@@ -323,12 +406,17 @@ function agregarProducto() {
                 alert(
                     "Escribe los kilos por producto."
                 );
+
             }
+
 
             medidaCampo.focus();
 
+
             return false;
+
         }
+
     }
 
 
@@ -350,6 +438,7 @@ function agregarProducto() {
         total =
             cantidad *
             precio;
+
     }
 
 
@@ -377,23 +466,33 @@ function agregarProducto() {
             Number(
                 total.toFixed(2)
             )
+
     });
 
 
     mostrarItems();
 
 
+    /* LIMPIAR CAMPOS */
+
     nombreCampo.value =
         "";
+
 
     cantidadCampo.value =
         "1";
 
+
     precioCampo.value =
         "";
 
-    medidaCampo.value =
-        "1";
+
+    if (medidaCampo) {
+
+        medidaCampo.value =
+            "1";
+
+    }
 
 
     actualizarTipo();
@@ -403,12 +502,13 @@ function agregarProducto() {
 
 
     return true;
+
 }
 
 
-// =========================================================
-// MOSTRAR PRODUCTOS
-// =========================================================
+/* =========================================================
+   MOSTRAR PRODUCTOS
+   ========================================================= */
 
 function mostrarItems() {
 
@@ -421,6 +521,7 @@ function mostrarItems() {
     if (!body) {
 
         return;
+
     }
 
 
@@ -456,7 +557,10 @@ function mostrarItems() {
 
             if (
                 item.medida !==
-                null
+                null &&
+                item.medida !==
+                undefined &&
+                item.medida !== ""
             ) {
 
                 if (
@@ -481,7 +585,9 @@ function mostrarItems() {
 
                     medidaTexto =
                         item.medida;
+
                 }
+
             }
 
 
@@ -510,13 +616,15 @@ function mostrarItems() {
                 <td>
                     ${Number(
                         item.precio
-                    ).toFixed(2)} Bs
+                    ).toFixed(2)}
+                    Bs
                 </td>
 
                 <td>
                     ${Number(
                         item.total
-                    ).toFixed(2)} Bs
+                    ).toFixed(2)}
+                    Bs
                 </td>
 
                 <td>
@@ -537,6 +645,7 @@ function mostrarItems() {
             body.appendChild(
                 fila
             );
+
         }
     );
 
@@ -551,33 +660,47 @@ function mostrarItems() {
 
         total.textContent =
             totalGeneral.toFixed(2);
+
     }
 
 
     sincronizarFormulario();
+
 }
 
 
-// =========================================================
-// ELIMINAR PRODUCTO
-// =========================================================
+/* =========================================================
+   ELIMINAR PRODUCTO
+   ========================================================= */
 
 function eliminarItem(
     index
 ) {
+
+    if (
+        index < 0 ||
+        index >= items.length
+    ) {
+
+        return;
+
+    }
+
 
     items.splice(
         index,
         1
     );
 
+
     mostrarItems();
+
 }
 
 
-// =========================================================
-// GUARDAR ITEMS EN EL FORMULARIO
-// =========================================================
+/* =========================================================
+   SINCRONIZAR JSON
+   ========================================================= */
 
 function sincronizarFormulario() {
 
@@ -593,13 +716,15 @@ function sincronizarFormulario() {
             JSON.stringify(
                 items
             );
+
     }
+
 }
 
 
-// =========================================================
-// PREPARAR FORMULARIO
-// =========================================================
+/* =========================================================
+   PREPARAR FORMULARIO
+   ========================================================= */
 
 function prepararFormulario() {
 
@@ -608,11 +733,18 @@ function prepararFormulario() {
             "nombre_producto"
         );
 
+
     const precioCampo =
         document.getElementById(
             "precio"
         );
 
+
+    /*
+       Si el usuario escribió un producto
+       pero no presionó ENTER, lo agregamos
+       automáticamente antes de guardar.
+    */
 
     if (
 
@@ -641,7 +773,9 @@ function prepararFormulario() {
         ) {
 
             return false;
+
         }
+
     }
 
 
@@ -653,7 +787,9 @@ function prepararFormulario() {
             "Agrega al menos un producto antes de guardar."
         );
 
+
         return false;
+
     }
 
 
@@ -661,12 +797,13 @@ function prepararFormulario() {
 
 
     return true;
+
 }
 
 
-// =========================================================
-// GUARDAR DIRECTAMENTE COMO VENTA
-// =========================================================
+/* =========================================================
+   GUARDAR COMO VENTA
+   ========================================================= */
 
 function guardarComoVenta() {
 
@@ -675,6 +812,7 @@ function guardarComoVenta() {
     ) {
 
         return;
+
     }
 
 
@@ -683,25 +821,30 @@ function guardarComoVenta() {
             "cliente_nombre"
         );
 
+
     const clienteTelefono =
         document.getElementById(
             "cliente_telefono"
         );
+
 
     const ventaClienteNombre =
         document.getElementById(
             "venta_cliente_nombre"
         );
 
+
     const ventaClienteTelefono =
         document.getElementById(
             "venta_cliente_telefono"
         );
 
+
     const ventaItems =
         document.getElementById(
             "venta_items_json"
         );
+
 
     const formularioVenta =
         document.getElementById(
@@ -717,25 +860,31 @@ function guardarComoVenta() {
             "No se encontró el formulario de venta."
         );
 
+
         return;
+
     }
 
 
     if (
-        ventaClienteNombre
+        ventaClienteNombre &&
+        clienteNombre
     ) {
 
         ventaClienteNombre.value =
             clienteNombre.value;
+
     }
 
 
     if (
-        ventaClienteTelefono
+        ventaClienteTelefono &&
+        clienteTelefono
     ) {
 
         ventaClienteTelefono.value =
             clienteTelefono.value;
+
     }
 
 
@@ -747,16 +896,18 @@ function guardarComoVenta() {
             JSON.stringify(
                 items
             );
+
     }
 
 
     formularioVenta.submit();
+
 }
 
 
-// =========================================================
-// CARGAR PRODUCTOS EXISTENTES
-// =========================================================
+/* =========================================================
+   CARGAR PRODUCTOS EXISTENTES
+   ========================================================= */
 
 function cargarItemsExistentes() {
 
@@ -766,6 +917,7 @@ function cargarItemsExistentes() {
     ) {
 
         return;
+
     }
 
 
@@ -776,6 +928,7 @@ function cargarItemsExistentes() {
     ) {
 
         return;
+
     }
 
 
@@ -783,51 +936,119 @@ function cargarItemsExistentes() {
         detallesIniciales.map(
             function (item) {
 
+                const cantidad =
+                    Number(
+                        item.cantidad
+                    );
+
+
+                const precio =
+                    Number(
+                        item.precio
+                    );
+
+
+                let medida =
+                    null;
+
+
+                if (
+                    item.medida !==
+                    null &&
+                    item.medida !==
+                    undefined &&
+                    item.medida !== ""
+                ) {
+
+                    medida =
+                        Number(
+                            item.medida
+                        );
+
+                }
+
+
+                let total =
+                    Number(
+                        item.total
+                    );
+
+
+                /*
+                   Si el total guardado
+                   no es válido, recalcular.
+                */
+
+                if (
+                    Number.isNaN(
+                        total
+                    )
+                ) {
+
+                    if (
+                        item.tipo ===
+                        "metros" ||
+                        item.tipo ===
+                        "kilos"
+                    ) {
+
+                        total =
+                            cantidad *
+                            medida *
+                            precio;
+
+                    } else {
+
+                        total =
+                            cantidad *
+                            precio;
+
+                    }
+
+                }
+
+
                 return {
 
                     producto_id:
                         null,
 
                     nombre_producto:
-                        item.nombre_producto,
+                        item.nombre_producto ||
+                        "",
 
                     cantidad:
-                        Number(
-                            item.cantidad
-                        ),
+                        cantidad,
 
                     tipo:
-                        item.tipo,
+                        item.tipo ||
+                        "normal",
 
                     medida:
-                        item.medida ===
-                        null
-                            ? null
-                            : Number(
-                                item.medida
-                            ),
+                        medida,
 
                     precio:
-                        Number(
-                            item.precio
-                        ),
+                        precio,
 
                     total:
                         Number(
-                            item.total
+                            total.toFixed(2)
                         )
+
                 };
+
             }
         );
 
 
     mostrarItems();
+
 }
 
 
-// =========================================================
-// SEGURIDAD HTML
-// =========================================================
+/* =========================================================
+   SEGURIDAD
+   ========================================================= */
 
 function escapeHtml(
     text
@@ -844,4 +1065,5 @@ function escapeHtml(
 
 
     return div.innerHTML;
+
 }
