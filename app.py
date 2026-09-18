@@ -1420,6 +1420,23 @@ def pdf_cotizacion(cotizacion_id):
         as_attachment=False,
         download_name=f"{documento['numero']}.pdf"
     )
+    @app.route("/cotizaciones/<int:cotizacion_id>/pdf/ver")
+def ver_pdf_cotizacion(cotizacion_id):
+    documento, detalles = obtener_cotizacion(cotizacion_id)
+
+    return render_template(
+        "visor_pdf.html",
+        tipo_documento="cotizacion",
+        documento=documento,
+        pdf_url=url_for(
+            "pdf_cotizacion",
+            cotizacion_id=cotizacion_id
+        ),
+        imprimir_url=url_for(
+            "solicitar_impresion_cotizacion",
+            cotizacion_id=cotizacion_id
+        )
+    )
 
 # =========================================================
 # EJECUTAR
