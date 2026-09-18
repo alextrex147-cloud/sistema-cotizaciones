@@ -1404,45 +1404,22 @@ def pdf_cotizacion(
 # PDF VENTA
 # =========================================================
 
-@app.route(
-    "/ventas/<int:venta_id>/pdf"
-)
-def pdf_venta(
-    venta_id
-):
-
-    documento, detalles = (
-        obtener_venta(
-            venta_id
-        )
-    )
-
+@app.route("/cotizaciones/<int:cotizacion_id>/pdf")
+def pdf_cotizacion(cotizacion_id):
+    documento, detalles = obtener_cotizacion(cotizacion_id)
 
     archivo = generar_pdf(
-
-        "venta",
-
+        "cotizacion",
         documento,
-
         detalles
-
     )
-
 
     return send_file(
-
         archivo,
-
-        mimetype=
-            "application/pdf",
-
-        as_attachment=True,
-
-        download_name=
-            f"{documento['numero']}.pdf"
-
+        mimetype="application/pdf",
+        as_attachment=False,
+        download_name=f"{documento['numero']}.pdf"
     )
-
 
 # =========================================================
 # EJECUTAR
