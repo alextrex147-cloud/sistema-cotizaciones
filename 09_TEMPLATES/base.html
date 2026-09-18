@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Sistema de Cotizaciones
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='18_CSS/estilo.css') }}"
+    >
+
+</head>
+
+<body>
+
+<div class="app">
+
+    <aside class="sidebar">
+
+        <div class="logo">
+            🏢 MI EMPRESA
+        </div>
+
+        <nav>
+
+            <a href="{{ url_for('inicio') }}">
+                🏠 INICIO
+            </a>
+
+            <a href="{{ url_for('cotizaciones') }}">
+                🧾 COTIZACIONES
+            </a>
+
+            <a href="{{ url_for('ventas') }}">
+                💰 VENTAS
+            </a>
+
+            <a href="{{ url_for('productos') }}">
+                📦 PRODUCTOS
+            </a>
+
+            <a href="{{ url_for('clientes') }}">
+                👤 CLIENTES
+            </a>
+
+        </nav>
+
+    </aside>
+
+
+    <main class="contenido">
+
+        {% with mensajes = get_flashed_messages() %}
+
+            {% if mensajes %}
+
+                {% for mensaje in mensajes %}
+
+                    <div class="alerta">
+                        {{ mensaje }}
+                    </div>
+
+                {% endfor %}
+
+            {% endif %}
+
+        {% endwith %}
+
+
+        {% block contenido %}
+        {% endblock %}
+
+    </main>
+
+</div>
+
+
+<script
+    src="{{ url_for('static', filename='20_JS/programa.js') }}"
+></script>
+
+</body>
+
+</html>
