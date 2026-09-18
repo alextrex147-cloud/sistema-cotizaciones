@@ -2,180 +2,208 @@
 
 {% block contenido %}
 
-{% set es_venta = modo.startswith("venta") %}
-
 {% if modo == "nueva" %}
 
-    <h1>🧾 NUEVA COTIZACIÓN</h1>
+<h1>🧾 NUEVA COTIZACIÓN</h1>
 
 {% elif modo == "venta_nueva" %}
 
-    <h1>💰 NUEVA VENTA</h1>
+<h1>💰 NUEVA VENTA</h1>
 
 {% elif modo == "ver" %}
 
-    <h1>🧾 COTIZACIÓN {{ documento.numero }}</h1>
+<h1>🧾 COTIZACIÓN {{ documento.numero }}</h1>
 
 {% elif modo == "editar" %}
 
-    <h1>✏️ EDITAR COTIZACIÓN {{ documento.numero }}</h1>
+<h1>✏️ EDITAR COTIZACIÓN {{ documento.numero }}</h1>
 
 {% elif modo == "venta_ver" %}
 
-    <h1>💰 VENTA {{ documento.numero }}</h1>
+<h1>💰 VENTA {{ documento.numero }}</h1>
 
 {% else %}
 
-    <h1>✏️ EDITAR VENTA {{ documento.numero }}</h1>
+<h1>✏️ EDITAR VENTA {{ documento.numero }}</h1>
 
 {% endif %}
 
 
 {% if documento and documento.clientes %}
 
-    {% set cliente_actual = documento.clientes %}
+{% set cliente_actual = documento.clientes %}
 
 {% else %}
 
-    {% set cliente_actual = {} %}
+{% set cliente_actual = {} %}
 
 {% endif %}
 
 
 {% if modo in ["ver", "venta_ver"] %}
 
-    <div class="detalle-documento">
 
-        <div class="cliente-box">
+<div class="detalle-documento">
 
-            <h2>👤 CLIENTE</h2>
+    <div class="cliente-box">
 
-            <p>
-                <strong>Nombre:</strong>
-                {{ cliente_actual.nombre or "Sin cliente" }}
-            </p>
+        <h2>👤 CLIENTE</h2>
 
-            <p>
-                <strong>Teléfono:</strong>
-                {{ cliente_actual.telefono or "" }}
-            </p>
+        <p>
+            <strong>Nombre:</strong>
+            {{ cliente_actual.nombre or "Sin cliente" }}
+        </p>
 
-        </div>
+        <p>
+            <strong>Teléfono:</strong>
+            {{ cliente_actual.telefono or "" }}
+        </p>
 
-
-        <div class="tabla-contenedor">
-
-            <table>
-
-                <thead>
-
-                    <tr>
-                        <th>PRODUCTO</th>
-                        <th>CANTIDAD</th>
-                        <th>TIPO</th>
-                        <th>MEDIDA</th>
-                        <th>PRECIO</th>
-                        <th>TOTAL</th>
-                    </tr>
-
-                </thead>
-
-                <tbody>
-
-                {% for item in detalles %}
-
-                    <tr>
-
-                        <td>
-                            {{ item.nombre_producto }}
-                        </td>
-
-                        <td>
-                            {{ item.cantidad }}
-                        </td>
-
-                        <td>
-                            {{ item.tipo }}
-                        </td>
-
-                        <td>
-                            {{ item.medida or "-" }}
-                        </td>
-
-                        <td>
-                            {{ "%.2f"|format(item.precio|float) }} Bs
-                        </td>
-
-                        <td>
-                            {{ "%.2f"|format(item.total|float) }} Bs
-                        </td>
-
-                    </tr>
-
-                {% endfor %}
-
-                </tbody>
-
-            </table>
+    </div>
 
 
-            <div class="total-final">
+    <div class="tabla-contenedor">
 
-                TOTAL:
-                {{ "%.2f"|format(documento.total|float) }}
-                Bs
+        <table>
 
-            </div>
+            <thead>
 
-        </div>
+                <tr>
+                    <th>PRODUCTO</th>
+                    <th>CANTIDAD</th>
+                    <th>TIPO</th>
+                    <th>MEDIDA</th>
+                    <th>PRECIO</th>
+                    <th>TOTAL</th>
+                </tr>
+
+            </thead>
 
 
-        <div class="botones">
+            <tbody>
 
-            {% if modo == "ver" %}
+            {% for item in detalles %}
 
-                <a
-                    class="btn"
-                    href="{{ url_for('editar_cotizacion', cotizacion_id=documento.id) }}"
-                >
-                    ✏️ EDITAR
-                </a>
+                <tr>
 
-                <a
-                    class="btn verde"
-                    href="{{ url_for('convertir_cotizacion_ruta', cotizacion_id=documento.id) }}"
-                >
-                    💰 PASAR A VENTA
-                </a>
+                    <td>
+                        {{ item.nombre_producto }}
+                    </td>
 
-                <a
-                    class="btn"
-                    href="{{ url_for('pdf_cotizacion', cotizacion_id=documento.id) }}"
-                >
-                    📄 PDF
-                </a>
+                    <td>
+                        {{ item.cantidad }}
+                    </td>
 
-            {% else %}
+                    <td>
+                        {{ item.tipo }}
+                    </td>
 
-                <a
-                    class="btn"
-                    href="{{ url_for('editar_venta', venta_id=documento.id) }}"
-                >
-                    ✏️ EDITAR
-                </a>
+                    <td>
 
-                <a
-                    class="btn"
-                    href="{{ url_for('pdf_venta', venta_id=documento.id) }}"
-                >
-                    📄 PDF
-                </a>
+                        {% if item.medida %}
 
-            {% endif %}
+                            {% if item.tipo == "metros" %}
+
+                                {{ item.medida }} m
+
+                            {% elif item.tipo == "kilos" %}
+
+                                {{ item.medida }} kg
+
+                            {% else %}
+
+                                {{ item.medida }}
+
+                            {% endif %}
+
+                        {% else %}
+
+                            -
+
+                        {% endif %}
+
+                    </td>
+
+                    <td>
+                        {{ "%.2f"|format(item.precio|float) }} Bs
+                    </td>
+
+                    <td>
+                        {{ "%.2f"|format(item.total|float) }} Bs
+                    </td>
+
+                </tr>
+
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+
+        <div class="total-final">
+
+            TOTAL:
+
+            {{ "%.2f"|format(documento.total|float) }}
+
+            Bs
 
         </div>
 
     </div>
+
+
+    <div class="botones">
+
+        {% if modo == "ver" %}
+
+            <a
+                class="btn"
+                href="{{ url_for('editar_cotizacion', cotizacion_id=documento.id) }}"
+            >
+                ✏️ EDITAR
+            </a>
+
+
+            <a
+                class="btn verde"
+                href="{{ url_for('convertir_cotizacion_ruta', cotizacion_id=documento.id) }}"
+            >
+                💰 PASAR A VENTA
+            </a>
+
+
+            <a
+                class="btn"
+                href="{{ url_for('pdf_cotizacion', cotizacion_id=documento.id) }}"
+            >
+                📄 PDF
+            </a>
+
+        {% else %}
+
+            <a
+                class="btn"
+                href="{{ url_for('editar_venta', venta_id=documento.id) }}"
+            >
+                ✏️ EDITAR
+            </a>
+
+
+            <a
+                class="btn"
+                href="{{ url_for('pdf_venta', venta_id=documento.id) }}"
+            >
+                📄 PDF
+            </a>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
 
 {% else %}
 
@@ -185,23 +213,25 @@
 
     {% if modo == "nueva" %}
 
-        action="{{ url_for('guardar_cotizacion') }}"
+    action="{{ url_for('guardar_cotizacion') }}"
 
     {% elif modo == "editar" %}
 
-        action="{{ url_for('actualizar_cotizacion_ruta', cotizacion_id=documento.id) }}"
+    action="{{ url_for('actualizar_cotizacion_ruta', cotizacion_id=documento.id) }}"
 
     {% elif modo == "venta_nueva" %}
 
-        action="{{ url_for('guardar_venta') }}"
+    action="{{ url_for('guardar_venta') }}"
 
     {% else %}
 
-        action="{{ url_for('actualizar_venta_ruta', venta_id=documento.id) }}"
+    action="{{ url_for('actualizar_venta_ruta', venta_id=documento.id) }}"
 
     {% endif %}
 
     id="formulario-documento"
+
+    onsubmit="return prepararFormulario()"
 >
 
 
@@ -209,13 +239,16 @@
 
         <h2>👤 CLIENTE</h2>
 
+
         <div class="grid-form">
+
 
             <div>
 
                 <label>
                     Nombre del cliente
                 </label>
+
 
                 <input
                     type="text"
@@ -226,16 +259,17 @@
                     required
                 >
 
+
                 <datalist id="lista_clientes">
 
-                {% for c in clientes %}
+                    {% for c in clientes %}
 
                     <option
                         value="{{ c.nombre }}"
                         data-telefono="{{ c.telefono }}"
                     ></option>
 
-                {% endfor %}
+                    {% endfor %}
 
                 </datalist>
 
@@ -248,6 +282,7 @@
                     Número telefónico
                 </label>
 
+
                 <input
                     type="text"
                     name="cliente_telefono"
@@ -257,9 +292,11 @@
 
             </div>
 
+
         </div>
 
     </div>
+
 
 
     <div class="formulario">
@@ -269,11 +306,13 @@
 
         <div class="grid-form">
 
+
             <div>
 
                 <label>
                     Producto
                 </label>
+
 
                 <input
                     type="text"
@@ -291,6 +330,7 @@
                     Cantidad
                 </label>
 
+
                 <input
                     type="number"
                     id="cantidad"
@@ -307,6 +347,7 @@
                 <label>
                     Tipo
                 </label>
+
 
                 <select id="tipo">
 
@@ -327,11 +368,15 @@
             </div>
 
 
-            <div id="campo-medida">
+            <div
+                id="campo-medida"
+                style="display:none;"
+            >
 
                 <label id="texto-medida">
                     Medida
                 </label>
+
 
                 <input
                     type="number"
@@ -350,17 +395,25 @@
                     Precio
                 </label>
 
+
                 <input
                     type="number"
                     id="precio"
                     min="0"
                     step="0.01"
-                    placeholder="0.00"
+                    placeholder="Precio"
                 >
 
             </div>
 
+
         </div>
+
+
+        <p>
+            💡 Para agregar el producto presiona
+            <strong>ENTER</strong> en el campo Precio.
+        </p>
 
 
         <div class="tabla-contenedor">
@@ -382,6 +435,7 @@
                     </tr>
 
                 </thead>
+
 
                 <tbody id="items-body"></tbody>
 
@@ -409,49 +463,55 @@
         type="hidden"
         name="items_json"
         id="items_json"
+        value="[]"
     >
 
 
     <div class="botones">
 
+
         {% if modo in ["nueva", "editar"] %}
 
-            <button
-                type="submit"
-                class="btn principal"
-                onclick="prepararFormulario()"
-            >
-                🧾 GUARDAR COMO COTIZACIÓN
-            </button>
+
+        <button
+            type="submit"
+            class="btn principal"
+        >
+            🧾 GUARDAR COMO COTIZACIÓN
+        </button>
 
 
-            {% if modo == "nueva" %}
+        {% if modo == "nueva" %}
 
-                <button
-                    type="button"
-                    class="btn verde"
-                    onclick="guardarComoVenta()"
-                >
-                    💰 GUARDAR COMO VENTA
-                </button>
+        <button
+            type="button"
+            class="btn verde"
+            onclick="guardarComoVenta()"
+        >
+            💰 GUARDAR COMO VENTA
+        </button>
 
-            {% endif %}
+        {% endif %}
+
 
         {% else %}
 
-            <button
-                type="submit"
-                class="btn verde"
-                onclick="prepararFormulario()"
-            >
-                💰 GUARDAR VENTA
-            </button>
+
+        <button
+            type="submit"
+            class="btn verde"
+        >
+            💰 GUARDAR VENTA
+        </button>
+
 
         {% endif %}
 
     </div>
 
+
 </form>
+
 
 
 {% if modo == "nueva" %}
@@ -468,11 +528,13 @@
         id="venta_cliente_nombre"
     >
 
+
     <input
         type="hidden"
         name="cliente_telefono"
         id="venta_cliente_telefono"
     >
+
 
     <input
         type="hidden"
@@ -490,8 +552,10 @@
 
 <script>
 
-const detallesIniciales = {{ detalles | tojson }};
+const detallesIniciales =
+    {{ detalles | tojson }};
 
 </script>
+
 
 {% endblock %}
