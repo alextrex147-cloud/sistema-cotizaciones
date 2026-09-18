@@ -1,3 +1,18 @@
+import sys
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+sys.path.insert(
+    0,
+    os.path.join(BASE_DIR, "03_BASE_DATOS")
+)
+
+sys.path.insert(
+    0,
+    os.path.join(BASE_DIR, "22_PDF")
+)
+
 from flask import (
     Flask,
     render_template,
@@ -9,23 +24,21 @@ from flask import (
     flash
 )
 
-from 03_BASE_DATOS.clientes import (
+from clientes import (
     listar_clientes,
-    obtener_cliente,
     crear_o_actualizar_cliente,
     actualizar_cliente,
     eliminar_cliente
 )
 
-from 03_BASE_DATOS.productos import (
+from productos import (
     listar_productos,
-    obtener_producto,
     crear_producto,
     actualizar_producto,
     eliminar_producto
 )
 
-from 03_BASE_DATOS.cotizaciones import (
+from cotizaciones import (
     listar_cotizaciones,
     obtener_cotizacion,
     crear_cotizacion,
@@ -33,7 +46,7 @@ from 03_BASE_DATOS.cotizaciones import (
     eliminar_cotizacion
 )
 
-from 03_BASE_DATOS.ventas import (
+from ventas import (
     listar_ventas,
     obtener_venta,
     crear_venta,
@@ -42,27 +55,42 @@ from 03_BASE_DATOS.ventas import (
     convertir_cotizacion
 )
 
-from 22_PDF.generador_pdf import generar_pdf
+from generador_pdf import generar_pdf
 
 
 app = Flask(__name__)
 
-app.secret_key = "CAMBIAR_ESTA_CLAVE_EN_RENDER"
+app.secret_key = os.getenv(
+    "FLASK_SECRET_KEY",
+    "clave-local-cambiar-en-render"
+)
 
 
 def numero(valor, defecto=0):
     try:
         return float(valor)
-    except Exception:
+    except:
         return defecto
 
 
 def calcular_item(item):
-    cantidad = numero(item.get("cantidad"))
-    precio = numero(item.get("precio"))
-    medida = numero(item.get("medida"), 1)
+    cantidad = numero(
+        item.get("cantidad")
+    )
 
-    tipo = item.get("tipo", "normal")
+    precio = numero(
+        item.get("precio")
+    )
+
+    tipo = item.get(
+        "tipo",
+        "normal"
+    )
+
+    medida = numero(
+        item.get("medida"),
+        1
+    )
 
     if tipo in ["metros", "kilos"]:
         total = cantidad * medida * precio
@@ -71,44 +99,23 @@ def calcular_item(item):
 
     item["cantidad"] = cantidad
     item["precio"] = precio
-    item["medida"] = medida if tipo != "normal" else None
     item["tipo"] = tipo
-    item["total"] = round(total, 2)
+    item["medida"] = (
+        medida
+        if tipo != "normal"
+        else None
+    )
+    item["total"] = round(
+        total,
+        2
+    )
 
     return item
 
 
-def leer_items():
-    items = request.get_json(silent=True)
-
-    if not items:
-        items = request.form.get("items")
-
-        if not items:
-            return []
-
-        import json
-
-        try:
-            items = json.loads(items)
-        except Exception:
-            return []
-
-    resultado = []
-
-    for item in items:
-        if not item.get("nombre_producto"):
-            continue
-
-        resultado.append(
-            calcular_item(item)
-        )
-
-    return resultado
-
-
 @app.route("/")
 def inicio():
+
     cotizaciones = listar_cotizaciones()
     ventas = listar_ventas()
     productos = listar_productos()
@@ -116,209 +123,253 @@ def inicio():
 
     registros = []
 
-    for c in cotizaciones[:5]:
+    for c in cotizaciones[:10]:
+
         cliente = c.get("clientes") or {}
 
         registros.append({
             "tipo": "Cotización",
             "numero": c["numero"],
-            "cliente": cliente.get("nombre", "Sin cliente"),
+            "cliente": cliente.get(
+                "nombre",
+                "Sin cliente"
+            ),
             "total": c["total"],
-            "fecha": str(c.get("created_at", ""))[:10]
+            "fecha": str(
+                c.get(
+                    "created_at",
+                    ""
+                )
+            )[:10]
         })
 
-    for v in ventas[:5]:
+    for v in ventas[:10]:
+
         cliente = v.get("clientes") or {}
 
         registros.append({
             "tipo": "Venta",
             "numero": v["numero"],
-            "cliente": cliente.get("nombre", "Sin cliente"),
+            "cliente": cliente.get(
+                "nombre",
+                "Sin cliente"
+            ),
             "total": v["total"],
-            "fecha": str(v.get("created_at", ""))[:10]
+            "fecha": str(
+                v.get(
+                    "created_at",
+                    ""
+                )
+            )[:10]
         })
 
-    registros = sorted(
-        registros,
+    registros.sort(
         key=lambda x: x["fecha"],
         reverse=True
-    )[:10]
+    )
 
     return render_template(
         "inicio.html",
-        cantidad_cotizaciones=len(cotizaciones),
-        cantidad_ventas=len(ventas),
-        cantidad_productos=len(productos),
-        cantidad_clientes=len(clientes),
-        registros=registros
+        cantidad_cotizaciones=len(
+            cotizaciones
+        ),
+        cantidad_ventas=len(
+            ventas
+        ),
+        cantidad_productos=len(
+            productos
+        ),
+        cantidad_clientes=len(
+            clientes
+        ),
+        registros=registros[:10]
     )
 
 
-# =========================================================
+# =========================
 # PRODUCTOS
-# =========================================================
+# =========================
 
 @app.route("/productos")
 def productos():
-    busqueda = request.args.get(
+
+    buscar = request.args.get(
         "buscar",
         ""
     )
 
-    lista = listar_productos(busqueda)
+    lista = listar_productos(
+        buscar
+    )
 
     return render_template(
         "productos.html",
         productos=lista,
-        buscar=busqueda
+        buscar=buscar
     )
 
 
-@app.route("/productos/crear", methods=["POST"])
+@app.route(
+    "/productos/crear",
+    methods=["POST"]
+)
 def producto_crear():
-    nombre = request.form.get("nombre", "").strip()
-    precio = numero(
-        request.form.get("precio")
-    )
-    unidad = request.form.get(
-        "unidad",
-        "unidad"
-    )
 
-    if nombre:
-        crear_producto(
-            nombre,
-            precio,
-            unidad
-        )
-
-    return redirect(url_for("productos"))
-
-
-@app.route("/productos/editar/<int:producto_id>", methods=["POST"])
-def producto_editar(producto_id):
-    nombre = request.form.get(
-        "nombre",
-        ""
-    ).strip()
-
-    precio = numero(
-        request.form.get("precio")
+    crear_producto(
+        request.form["nombre"],
+        numero(
+            request.form["precio"]
+        ),
+        request.form["unidad"]
     )
 
-    unidad = request.form.get(
-        "unidad",
-        "unidad"
+    return redirect(
+        url_for("productos")
     )
+
+
+@app.route(
+    "/productos/editar/<int:producto_id>",
+    methods=["POST"]
+)
+def producto_editar(
+    producto_id
+):
 
     actualizar_producto(
         producto_id,
-        nombre,
-        precio,
-        unidad
+        request.form["nombre"],
+        numero(
+            request.form["precio"]
+        ),
+        request.form["unidad"]
     )
 
-    return redirect(url_for("productos"))
+    return redirect(
+        url_for("productos")
+    )
 
 
-@app.route("/productos/eliminar/<int:producto_id>")
-def producto_eliminar(producto_id):
-    eliminar_producto(producto_id)
+@app.route(
+    "/productos/eliminar/<int:producto_id>"
+)
+def producto_eliminar(
+    producto_id
+):
 
-    return redirect(url_for("productos"))
+    eliminar_producto(
+        producto_id
+    )
+
+    return redirect(
+        url_for("productos")
+    )
 
 
 @app.route("/api/productos")
 def api_productos():
-    lista = listar_productos()
 
-    return jsonify(lista)
+    return jsonify(
+        listar_productos()
+    )
 
 
-# =========================================================
+# =========================
 # CLIENTES
-# =========================================================
+# =========================
 
 @app.route("/clientes")
 def clientes():
-    busqueda = request.args.get(
+
+    buscar = request.args.get(
         "buscar",
         ""
     )
 
-    lista = listar_clientes(busqueda)
-
     return render_template(
         "clientes.html",
-        clientes=lista,
-        buscar=busqueda
+        clientes=listar_clientes(
+            buscar
+        ),
+        buscar=buscar
     )
 
 
-@app.route("/clientes/editar/<int:cliente_id>", methods=["POST"])
-def cliente_editar(cliente_id):
-    nombre = request.form.get(
-        "nombre",
-        ""
-    ).strip()
-
-    telefono = request.form.get(
-        "telefono",
-        ""
-    ).strip()
+@app.route(
+    "/clientes/editar/<int:cliente_id>",
+    methods=["POST"]
+)
+def cliente_editar(
+    cliente_id
+):
 
     actualizar_cliente(
         cliente_id,
-        nombre,
-        telefono
+        request.form["nombre"],
+        request.form["telefono"]
     )
 
-    return redirect(url_for("clientes"))
+    return redirect(
+        url_for("clientes")
+    )
 
 
-@app.route("/clientes/eliminar/<int:cliente_id>")
-def cliente_eliminar(cliente_id):
-    eliminar_cliente(cliente_id)
+@app.route(
+    "/clientes/eliminar/<int:cliente_id>"
+)
+def cliente_eliminar(
+    cliente_id
+):
 
-    return redirect(url_for("clientes"))
+    eliminar_cliente(
+        cliente_id
+    )
+
+    return redirect(
+        url_for("clientes")
+    )
 
 
 @app.route("/api/clientes")
 def api_clientes():
-    return jsonify(listar_clientes())
+
+    return jsonify(
+        listar_clientes()
+    )
 
 
-# =========================================================
+# =========================
 # COTIZACIONES
-# =========================================================
+# =========================
 
 @app.route("/cotizaciones")
 def cotizaciones():
-    lista = listar_cotizaciones()
 
     return render_template(
         "cotizaciones.html",
-        cotizaciones=lista
+        cotizaciones=listar_cotizaciones()
     )
 
 
 @app.route("/cotizaciones/nueva")
 def nueva_cotizacion():
-    productos = listar_productos()
-    clientes = listar_clientes()
 
     return render_template(
         "crear_cotizacion.html",
-        productos=productos,
-        clientes=clientes,
+        productos=listar_productos(),
+        clientes=listar_clientes(),
         modo="nueva",
         documento=None,
         detalles=[]
     )
 
 
-@app.route("/cotizaciones/guardar", methods=["POST"])
+@app.route(
+    "/cotizaciones/guardar",
+    methods=["POST"]
+)
 def guardar_cotizacion():
+
     import json
 
     nombre = request.form.get(
@@ -341,25 +392,31 @@ def guardar_cotizacion():
     items = [
         calcular_item(x)
         for x in items
-        if x.get("nombre_producto")
+        if x.get(
+            "nombre_producto"
+        )
     ]
 
     if not nombre:
         flash(
-            "Debes ingresar el nombre del cliente."
+            "Escribe el nombre del cliente."
         )
 
         return redirect(
-            url_for("nueva_cotizacion")
+            url_for(
+                "nueva_cotizacion"
+            )
         )
 
     if not items:
         flash(
-            "Debes agregar al menos un producto."
+            "Agrega al menos un producto."
         )
 
         return redirect(
-            url_for("nueva_cotizacion")
+            url_for(
+                "nueva_cotizacion"
+            )
         )
 
     cliente = crear_o_actualizar_cliente(
@@ -389,8 +446,13 @@ def guardar_cotizacion():
     )
 
 
-@app.route("/cotizaciones/<int:cotizacion_id>")
-def ver_cotizacion(cotizacion_id):
+@app.route(
+    "/cotizaciones/<int:cotizacion_id>"
+)
+def ver_cotizacion(
+    cotizacion_id
+):
+
     documento, detalles = obtener_cotizacion(
         cotizacion_id
     )
@@ -408,7 +470,10 @@ def ver_cotizacion(cotizacion_id):
 @app.route(
     "/cotizaciones/editar/<int:cotizacion_id>"
 )
-def editar_cotizacion(cotizacion_id):
+def editar_cotizacion(
+    cotizacion_id
+):
+
     documento, detalles = obtener_cotizacion(
         cotizacion_id
     )
@@ -427,18 +492,11 @@ def editar_cotizacion(cotizacion_id):
     "/cotizaciones/actualizar/<int:cotizacion_id>",
     methods=["POST"]
 )
-def actualizar_cotizacion_ruta(cotizacion_id):
+def actualizar_cotizacion_ruta(
+    cotizacion_id
+):
+
     import json
-
-    nombre = request.form.get(
-        "cliente_nombre",
-        ""
-    ).strip()
-
-    telefono = request.form.get(
-        "cliente_telefono",
-        ""
-    ).strip()
 
     items = json.loads(
         request.form.get(
@@ -450,16 +508,18 @@ def actualizar_cotizacion_ruta(cotizacion_id):
     items = [
         calcular_item(x)
         for x in items
-        if x.get("nombre_producto")
     ]
 
     cliente = crear_o_actualizar_cliente(
-        nombre,
-        telefono
+        request.form["cliente_nombre"],
+        request.form["cliente_telefono"]
     )
 
     total = round(
-        sum(x["total"] for x in items),
+        sum(
+            x["total"]
+            for x in items
+        ),
         2
     )
 
@@ -481,20 +541,28 @@ def actualizar_cotizacion_ruta(cotizacion_id):
 @app.route(
     "/cotizaciones/eliminar/<int:cotizacion_id>"
 )
-def eliminar_cotizacion_ruta(cotizacion_id):
+def eliminar_cotizacion_ruta(
+    cotizacion_id
+):
+
     eliminar_cotizacion(
         cotizacion_id
     )
 
     return redirect(
-        url_for("cotizaciones")
+        url_for(
+            "cotizaciones"
+        )
     )
 
 
 @app.route(
     "/cotizaciones/<int:cotizacion_id>/convertir"
 )
-def convertir_cotizacion_ruta(cotizacion_id):
+def convertir_cotizacion_ruta(
+    cotizacion_id
+):
+
     venta = convertir_cotizacion(
         cotizacion_id
     )
@@ -507,48 +575,39 @@ def convertir_cotizacion_ruta(cotizacion_id):
     )
 
 
-# =========================================================
+# =========================
 # VENTAS
-# =========================================================
+# =========================
 
 @app.route("/ventas")
 def ventas():
-    lista = listar_ventas()
 
     return render_template(
         "ventas.html",
-        ventas=lista
+        ventas=listar_ventas()
     )
 
 
 @app.route("/ventas/nueva")
 def nueva_venta():
-    productos = listar_productos()
-    clientes = listar_clientes()
 
     return render_template(
         "crear_cotizacion.html",
-        productos=productos,
-        clientes=clientes,
+        productos=listar_productos(),
+        clientes=listar_clientes(),
         modo="venta_nueva",
         documento=None,
         detalles=[]
     )
 
 
-@app.route("/ventas/guardar", methods=["POST"])
+@app.route(
+    "/ventas/guardar",
+    methods=["POST"]
+)
 def guardar_venta():
+
     import json
-
-    nombre = request.form.get(
-        "cliente_nombre",
-        ""
-    ).strip()
-
-    telefono = request.form.get(
-        "cliente_telefono",
-        ""
-    ).strip()
 
     items = json.loads(
         request.form.get(
@@ -560,16 +619,18 @@ def guardar_venta():
     items = [
         calcular_item(x)
         for x in items
-        if x.get("nombre_producto")
     ]
 
     cliente = crear_o_actualizar_cliente(
-        nombre,
-        telefono
+        request.form["cliente_nombre"],
+        request.form["cliente_telefono"]
     )
 
     total = round(
-        sum(x["total"] for x in items),
+        sum(
+            x["total"]
+            for x in items
+        ),
         2
     )
 
@@ -587,8 +648,13 @@ def guardar_venta():
     )
 
 
-@app.route("/ventas/<int:venta_id>")
-def ver_venta(venta_id):
+@app.route(
+    "/ventas/<int:venta_id>"
+)
+def ver_venta(
+    venta_id
+):
+
     documento, detalles = obtener_venta(
         venta_id
     )
@@ -603,8 +669,13 @@ def ver_venta(venta_id):
     )
 
 
-@app.route("/ventas/editar/<int:venta_id>")
-def editar_venta(venta_id):
+@app.route(
+    "/ventas/editar/<int:venta_id>"
+)
+def editar_venta(
+    venta_id
+):
+
     documento, detalles = obtener_venta(
         venta_id
     )
@@ -623,18 +694,11 @@ def editar_venta(venta_id):
     "/ventas/actualizar/<int:venta_id>",
     methods=["POST"]
 )
-def actualizar_venta_ruta(venta_id):
+def actualizar_venta_ruta(
+    venta_id
+):
+
     import json
-
-    nombre = request.form.get(
-        "cliente_nombre",
-        ""
-    ).strip()
-
-    telefono = request.form.get(
-        "cliente_telefono",
-        ""
-    ).strip()
 
     items = json.loads(
         request.form.get(
@@ -646,16 +710,18 @@ def actualizar_venta_ruta(venta_id):
     items = [
         calcular_item(x)
         for x in items
-        if x.get("nombre_producto")
     ]
 
     cliente = crear_o_actualizar_cliente(
-        nombre,
-        telefono
+        request.form["cliente_nombre"],
+        request.form["cliente_telefono"]
     )
 
     total = round(
-        sum(x["total"] for x in items),
+        sum(
+            x["total"]
+            for x in items
+        ),
         2
     )
 
@@ -674,8 +740,13 @@ def actualizar_venta_ruta(venta_id):
     )
 
 
-@app.route("/ventas/eliminar/<int:venta_id>")
-def eliminar_venta_ruta(venta_id):
+@app.route(
+    "/ventas/eliminar/<int:venta_id>"
+)
+def eliminar_venta_ruta(
+    venta_id
+):
+
     eliminar_venta(
         venta_id
     )
@@ -685,14 +756,17 @@ def eliminar_venta_ruta(venta_id):
     )
 
 
-# =========================================================
+# =========================
 # PDF
-# =========================================================
+# =========================
 
 @app.route(
     "/cotizaciones/<int:cotizacion_id>/pdf"
 )
-def pdf_cotizacion(cotizacion_id):
+def pdf_cotizacion(
+    cotizacion_id
+):
+
     documento, detalles = obtener_cotizacion(
         cotizacion_id
     )
@@ -714,7 +788,10 @@ def pdf_cotizacion(cotizacion_id):
 @app.route(
     "/ventas/<int:venta_id>/pdf"
 )
-def pdf_venta(venta_id):
+def pdf_venta(
+    venta_id
+):
+
     documento, detalles = obtener_venta(
         venta_id
     )
@@ -732,10 +809,6 @@ def pdf_venta(venta_id):
         download_name=f"{documento['numero']}.pdf"
     )
 
-
-# =========================================================
-# EJECUTAR
-# =========================================================
 
 if __name__ == "__main__":
     app.run(
