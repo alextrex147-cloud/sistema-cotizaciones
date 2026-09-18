@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+
+<div class="titulo-fila">
+
+    <h1>💰 VENTAS</h1>
+
+    <a
+        class="btn verde"
+        href="{{ url_for('nueva_venta') }}"
+    >
+        ➕ NUEVA VENTA
+    </a>
+
+</div>
+
+
+<div class="tabla-contenedor">
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <th>NÚMERO</th>
+                <th>CLIENTE</th>
+                <th>TOTAL</th>
+                <th>FECHA</th>
+                <th>ACCIONES</th>
+
+            </tr>
+
+        </thead>
+
+
+        <tbody>
+
+        {% for v in ventas %}
+
+            {% set cliente = v.clientes or {} %}
+
+            <tr>
+
+                <td>
+                    {{ v.numero }}
+                </td>
+
+                <td>
+                    {{ cliente.nombre or "Sin cliente" }}
+                </td>
+
+                <td>
+                    {{ "%.2f"|format(v.total|float) }} Bs
+                </td>
+
+                <td>
+                    {{ v.created_at[:10] }}
+                </td>
+
+                <td>
+
+                    <a
+                        class="btn pequeño"
+                        href="{{ url_for('ver_venta', venta_id=v.id) }}"
+                    >
+                        👁️
+                    </a>
+
+                    <a
+                        class="btn pequeño"
+                        href="{{ url_for('editar_venta', venta_id=v.id) }}"
+                    >
+                        ✏️
+                    </a>
+
+                    <a
+                        class="btn pequeño"
+                        href="{{ url_for('pdf_venta', venta_id=v.id) }}"
+                    >
+                        📄
+                    </a>
+
+                    <a
+                        class="btn rojo pequeño"
+                        href="{{ url_for('eliminar_venta_ruta', venta_id=v.id) }}"
+                        onclick="return confirm('¿Eliminar venta?')"
+                    >
+                        🗑️
+                    </a>
+
+                </td>
+
+            </tr>
+
+        {% else %}
+
+            <tr>
+
+                <td colspan="5">
+                    No hay ventas.
+                </td>
+
+            </tr>
+
+        {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}
