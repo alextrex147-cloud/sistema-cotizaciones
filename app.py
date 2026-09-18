@@ -59,6 +59,10 @@ from ventas import (
 from generador_pdf import generar_pdf
 
 
+# =========================================================
+# CONFIGURACIÓN
+# =========================================================
+
 app = Flask(
     __name__,
     template_folder="09_TEMPLATES",
@@ -76,33 +80,44 @@ app.secret_key = os.getenv(
 # =========================================================
 
 def numero(valor, defecto=0):
+
     try:
+
         return float(valor)
+
     except:
+
         return defecto
 
 
 def calcular_item(item):
 
     cantidad = numero(
-        item.get("cantidad")
+        item.get("cantidad"),
+        0
     )
 
     precio = numero(
-        item.get("precio")
+        item.get("precio"),
+        0
     )
 
-    tipo = item.get(
-        "tipo",
-        "normal"
-    )
+    tipo = str(
+        item.get(
+            "tipo",
+            "normal"
+        )
+    ).lower()
 
     medida = numero(
         item.get("medida"),
         1
     )
 
-    if tipo in ["metros", "kilos"]:
+    if tipo in [
+        "metros",
+        "kilos"
+    ]:
 
         total = (
             cantidad *
@@ -117,17 +132,16 @@ def calcular_item(item):
             precio
         )
 
+        tipo = "normal"
+        medida = None
+
     item["cantidad"] = cantidad
 
     item["precio"] = precio
 
     item["tipo"] = tipo
 
-    item["medida"] = (
-        medida
-        if tipo != "normal"
-        else None
-    )
+    item["medida"] = medida
 
     item["total"] = round(
         total,
@@ -146,9 +160,13 @@ def leer_items():
         "[]"
     )
 
+    # Si llega vacío
     if not items_json:
+
         return []
 
+
+    # Intentar convertir JSON
     try:
 
         items = json.loads(
@@ -157,11 +175,14 @@ def leer_items():
 
     except (
         json.JSONDecodeError,
-        TypeError
+        TypeError,
+        ValueError
     ):
 
         return []
 
+
+    # Debe ser una lista
     if not isinstance(
         items,
         list
@@ -169,7 +190,9 @@ def leer_items():
 
         return []
 
+
     items_finales = []
+
 
     for item in items:
 
@@ -177,7 +200,9 @@ def leer_items():
             item,
             dict
         ):
+
             continue
+
 
         nombre = str(
             item.get(
@@ -186,32 +211,49 @@ def leer_items():
             )
         ).strip()
 
+
         if not nombre:
+
             continue
 
-        item["nombre_producto"] = nombre
+
+        item["nombre_producto"] = (
+            nombre
+        )
+
 
         item = calcular_item(
             item
         )
 
+
+        # Cantidad válida
         if item["cantidad"] <= 0:
+
             continue
 
+
+        # Precio válido
         if item["precio"] < 0:
+
             continue
 
+
+        # Metros o kilos requieren medida
         if item["tipo"] in [
             "metros",
             "kilos"
         ]:
 
             if item["medida"] <= 0:
+
                 continue
+
 
         items_finales.append(
             item
         )
+
 
     return items_finales
 
@@ -223,15 +265,29 @@ def leer_items():
 @app.route("/")
 def inicio():
 
-    cotizaciones = listar_cotizaciones()
+    cotizaciones = (
+        listar_cotizaciones()
+    )
 
-    ventas = listar_ventas()
+    ventas = (
+        listar_ventas()
+    )
 
-    productos = listar_productos()
+    productos = (
+        listar_productos()
+    )
 
-    clientes = listar_clientes()
+    clientes = (
+        listar_clientes()
+    )
+
 
     registros = []
+
+
+    # -------------------------
+    # COTIZACIONES
+    # -------------------------
 
     for c in cotizaciones[:10]:
 
@@ -267,6 +323,11 @@ def inicio():
 
         })
 
+
+    # -------------------------
+    # VENTAS
+    # -------------------------
+
     for v in ventas[:10]:
 
         cliente = (
@@ -301,12 +362,15 @@ def inicio():
 
         })
 
+
     registros.sort(
         key=lambda x: x["fecha"],
         reverse=True
     )
 
+
     return render_template(
+
         "inicio.html",
 
         cantidad_cotizaciones=
@@ -323,6 +387,7 @@ def inicio():
 
         registros=
             registros[:10]
+
     )
 
 
@@ -338,14 +403,20 @@ def productos():
         ""
     )
 
+
     lista = listar_productos(
         buscar
     )
 
+
     return render_template(
+
         "productos.html",
+
         productos=lista,
+
         buscar=buscar
+
     )
 
 
@@ -366,6 +437,7 @@ def producto_crear():
         request.form["unidad"]
 
     )
+
 
     return redirect(
         url_for(
@@ -396,6 +468,7 @@ def producto_editar(
 
     )
 
+
     return redirect(
         url_for(
             "productos"
@@ -414,6 +487,7 @@ def producto_eliminar(
         producto_id
     )
 
+
     return redirect(
         url_for(
             "productos"
@@ -421,7 +495,9 @@ def producto_eliminar(
     )
 
 
-@app.route("/api/productos")
+@app.route(
+    "/api/productos"
+)
 def api_productos():
 
     return jsonify(
@@ -441,7 +517,9 @@ def clientes():
         ""
     )
 
+
     return render_template(
+
         "clientes.html",
 
         clientes=
@@ -451,6 +529,7 @@ def clientes():
 
         buscar=
             buscar
+
     )
 
 
@@ -472,6 +551,7 @@ def cliente_editar(
 
     )
 
+
     return redirect(
         url_for(
             "clientes"
@@ -490,6 +570,7 @@ def cliente_eliminar(
         cliente_id
     )
 
+
     return redirect(
         url_for(
             "clientes"
@@ -497,7 +578,9 @@ def cliente_eliminar(
     )
 
 
-@app.route("/api/clientes")
+@app.route(
+    "/api/clientes"
+)
 def api_clientes():
 
     return jsonify(
@@ -509,18 +592,28 @@ def api_clientes():
 # COTIZACIONES
 # =========================================================
 
-@app.route("/cotizaciones")
+@app.route(
+    "/cotizaciones"
+)
 def cotizaciones():
 
     return render_template(
+
         "cotizaciones.html",
 
         cotizaciones=
             listar_cotizaciones()
+
     )
 
 
-@app.route("/cotizaciones/nueva")
+# =========================================================
+# NUEVA COTIZACIÓN
+# =========================================================
+
+@app.route(
+    "/cotizaciones/nueva"
+)
 def nueva_cotizacion():
 
     return render_template(
@@ -541,8 +634,13 @@ def nueva_cotizacion():
 
         detalles=
             []
+
     )
 
+
+# =========================================================
+# GUARDAR COTIZACIÓN
+# =========================================================
 
 @app.route(
     "/cotizaciones/guardar",
@@ -555,10 +653,12 @@ def guardar_cotizacion():
         ""
     ).strip()
 
+
     telefono = request.form.get(
         "cliente_telefono",
         ""
     ).strip()
+
 
     if not nombre:
 
@@ -572,7 +672,9 @@ def guardar_cotizacion():
             )
         )
 
+
     items = leer_items()
+
 
     if not items:
 
@@ -586,10 +688,14 @@ def guardar_cotizacion():
             )
         )
 
-    cliente = crear_o_actualizar_cliente(
-        nombre,
-        telefono
+
+    cliente = (
+        crear_o_actualizar_cliente(
+            nombre,
+            telefono
+        )
     )
+
 
     total = round(
 
@@ -599,16 +705,22 @@ def guardar_cotizacion():
         ),
 
         2
+
     )
 
-    cotizacion = crear_cotizacion(
 
-        cliente["id"],
+    cotizacion = (
+        crear_cotizacion(
 
-        items,
+            cliente["id"],
 
-        total
+            items,
+
+            total
+
+        )
     )
+
 
     return redirect(
 
@@ -620,8 +732,13 @@ def guardar_cotizacion():
                 cotizacion["id"]
 
         )
+
     )
 
+
+# =========================================================
+# VER COTIZACIÓN
+# =========================================================
 
 @app.route(
     "/cotizaciones/<int:cotizacion_id>"
@@ -635,6 +752,7 @@ def ver_cotizacion(
             cotizacion_id
         )
     )
+
 
     return render_template(
 
@@ -654,8 +772,13 @@ def ver_cotizacion(
 
         detalles=
             detalles
+
     )
 
+
+# =========================================================
+# EDITAR COTIZACIÓN
+# =========================================================
 
 @app.route(
     "/cotizaciones/editar/<int:cotizacion_id>"
@@ -669,6 +792,7 @@ def editar_cotizacion(
             cotizacion_id
         )
     )
+
 
     return render_template(
 
@@ -688,8 +812,13 @@ def editar_cotizacion(
 
         detalles=
             detalles
+
     )
 
+
+# =========================================================
+# ACTUALIZAR COTIZACIÓN
+# =========================================================
 
 @app.route(
     "/cotizaciones/actualizar/<int:cotizacion_id>",
@@ -699,7 +828,40 @@ def actualizar_cotizacion_ruta(
     cotizacion_id
 ):
 
+    nombre = request.form.get(
+        "cliente_nombre",
+        ""
+    ).strip()
+
+
+    telefono = request.form.get(
+        "cliente_telefono",
+        ""
+    ).strip()
+
+
+    if not nombre:
+
+        flash(
+            "Escribe el nombre del cliente."
+        )
+
+        return redirect(
+
+            url_for(
+
+                "editar_cotizacion",
+
+                cotizacion_id=
+                    cotizacion_id
+
+            )
+
+        )
+
+
     items = leer_items()
+
 
     if not items:
 
@@ -708,27 +870,26 @@ def actualizar_cotizacion_ruta(
         )
 
         return redirect(
+
             url_for(
+
                 "editar_cotizacion",
+
                 cotizacion_id=
                     cotizacion_id
+
             )
+
         )
 
-    nombre = request.form.get(
-        "cliente_nombre",
-        ""
-    ).strip()
 
-    telefono = request.form.get(
-        "cliente_telefono",
-        ""
-    ).strip()
-
-    cliente = crear_o_actualizar_cliente(
-        nombre,
-        telefono
+    cliente = (
+        crear_o_actualizar_cliente(
+            nombre,
+            telefono
+        )
     )
+
 
     total = round(
 
@@ -738,7 +899,9 @@ def actualizar_cotizacion_ruta(
         ),
 
         2
+
     )
+
 
     actualizar_cotizacion(
 
@@ -749,7 +912,9 @@ def actualizar_cotizacion_ruta(
         items,
 
         total
+
     )
+
 
     return redirect(
 
@@ -761,8 +926,13 @@ def actualizar_cotizacion_ruta(
                 cotizacion_id
 
         )
+
     )
 
+
+# =========================================================
+# ELIMINAR COTIZACIÓN
+# =========================================================
 
 @app.route(
     "/cotizaciones/eliminar/<int:cotizacion_id>"
@@ -775,12 +945,17 @@ def eliminar_cotizacion_ruta(
         cotizacion_id
     )
 
+
     return redirect(
         url_for(
             "cotizaciones"
         )
     )
 
+
+# =========================================================
+# CONVERTIR COTIZACIÓN EN VENTA
+# =========================================================
 
 @app.route(
     "/cotizaciones/<int:cotizacion_id>/convertir"
@@ -789,9 +964,12 @@ def convertir_cotizacion_ruta(
     cotizacion_id
 ):
 
-    venta = convertir_cotizacion(
-        cotizacion_id
+    venta = (
+        convertir_cotizacion(
+            cotizacion_id
+        )
     )
+
 
     return redirect(
 
@@ -803,6 +981,7 @@ def convertir_cotizacion_ruta(
                 venta["id"]
 
         )
+
     )
 
 
@@ -810,7 +989,9 @@ def convertir_cotizacion_ruta(
 # VENTAS
 # =========================================================
 
-@app.route("/ventas")
+@app.route(
+    "/ventas"
+)
 def ventas():
 
     return render_template(
@@ -819,10 +1000,17 @@ def ventas():
 
         ventas=
             listar_ventas()
+
     )
 
 
-@app.route("/ventas/nueva")
+# =========================================================
+# NUEVA VENTA
+# =========================================================
+
+@app.route(
+    "/ventas/nueva"
+)
 def nueva_venta():
 
     return render_template(
@@ -843,8 +1031,13 @@ def nueva_venta():
 
         detalles=
             []
+
     )
 
+
+# =========================================================
+# GUARDAR VENTA
+# =========================================================
 
 @app.route(
     "/ventas/guardar",
@@ -857,10 +1050,12 @@ def guardar_venta():
         ""
     ).strip()
 
+
     telefono = request.form.get(
         "cliente_telefono",
         ""
     ).strip()
+
 
     if not nombre:
 
@@ -874,7 +1069,9 @@ def guardar_venta():
             )
         )
 
+
     items = leer_items()
+
 
     if not items:
 
@@ -888,10 +1085,14 @@ def guardar_venta():
             )
         )
 
-    cliente = crear_o_actualizar_cliente(
-        nombre,
-        telefono
+
+    cliente = (
+        crear_o_actualizar_cliente(
+            nombre,
+            telefono
+        )
     )
+
 
     total = round(
 
@@ -901,16 +1102,22 @@ def guardar_venta():
         ),
 
         2
+
     )
 
-    venta = crear_venta(
 
-        cliente["id"],
+    venta = (
+        crear_venta(
 
-        items,
+            cliente["id"],
 
-        total
+            items,
+
+            total
+
+        )
     )
+
 
     return redirect(
 
@@ -922,8 +1129,13 @@ def guardar_venta():
                 venta["id"]
 
         )
+
     )
 
+
+# =========================================================
+# VER VENTA
+# =========================================================
 
 @app.route(
     "/ventas/<int:venta_id>"
@@ -937,6 +1149,7 @@ def ver_venta(
             venta_id
         )
     )
+
 
     return render_template(
 
@@ -956,8 +1169,13 @@ def ver_venta(
 
         detalles=
             detalles
+
     )
 
+
+# =========================================================
+# EDITAR VENTA
+# =========================================================
 
 @app.route(
     "/ventas/editar/<int:venta_id>"
@@ -971,6 +1189,7 @@ def editar_venta(
             venta_id
         )
     )
+
 
     return render_template(
 
@@ -990,8 +1209,13 @@ def editar_venta(
 
         detalles=
             detalles
+
     )
 
+
+# =========================================================
+# ACTUALIZAR VENTA
+# =========================================================
 
 @app.route(
     "/ventas/actualizar/<int:venta_id>",
@@ -1001,7 +1225,40 @@ def actualizar_venta_ruta(
     venta_id
 ):
 
+    nombre = request.form.get(
+        "cliente_nombre",
+        ""
+    ).strip()
+
+
+    telefono = request.form.get(
+        "cliente_telefono",
+        ""
+    ).strip()
+
+
+    if not nombre:
+
+        flash(
+            "Escribe el nombre del cliente."
+        )
+
+        return redirect(
+
+            url_for(
+
+                "editar_venta",
+
+                venta_id=
+                    venta_id
+
+            )
+
+        )
+
+
     items = leer_items()
+
 
     if not items:
 
@@ -1019,22 +1276,17 @@ def actualizar_venta_ruta(
                     venta_id
 
             )
+
         )
 
-    nombre = request.form.get(
-        "cliente_nombre",
-        ""
-    ).strip()
 
-    telefono = request.form.get(
-        "cliente_telefono",
-        ""
-    ).strip()
-
-    cliente = crear_o_actualizar_cliente(
-        nombre,
-        telefono
+    cliente = (
+        crear_o_actualizar_cliente(
+            nombre,
+            telefono
+        )
     )
+
 
     total = round(
 
@@ -1044,7 +1296,9 @@ def actualizar_venta_ruta(
         ),
 
         2
+
     )
+
 
     actualizar_venta(
 
@@ -1055,7 +1309,9 @@ def actualizar_venta_ruta(
         items,
 
         total
+
     )
+
 
     return redirect(
 
@@ -1067,8 +1323,13 @@ def actualizar_venta_ruta(
                 venta_id
 
         )
+
     )
 
+
+# =========================================================
+# ELIMINAR VENTA
+# =========================================================
 
 @app.route(
     "/ventas/eliminar/<int:venta_id>"
@@ -1081,6 +1342,7 @@ def eliminar_venta_ruta(
         venta_id
     )
 
+
     return redirect(
         url_for(
             "ventas"
@@ -1089,7 +1351,7 @@ def eliminar_venta_ruta(
 
 
 # =========================================================
-# PDF
+# PDF COTIZACIÓN
 # =========================================================
 
 @app.route(
@@ -1105,6 +1367,7 @@ def pdf_cotizacion(
         )
     )
 
+
     archivo = generar_pdf(
 
         "cotizacion",
@@ -1112,7 +1375,9 @@ def pdf_cotizacion(
         documento,
 
         detalles
+
     )
+
 
     return send_file(
 
@@ -1125,8 +1390,13 @@ def pdf_cotizacion(
 
         download_name=
             f"{documento['numero']}.pdf"
+
     )
 
+
+# =========================================================
+# PDF VENTA
+# =========================================================
 
 @app.route(
     "/ventas/<int:venta_id>/pdf"
@@ -1141,6 +1411,7 @@ def pdf_venta(
         )
     )
 
+
     archivo = generar_pdf(
 
         "venta",
@@ -1148,7 +1419,9 @@ def pdf_venta(
         documento,
 
         detalles
+
     )
+
 
     return send_file(
 
@@ -1161,6 +1434,7 @@ def pdf_venta(
 
         download_name=
             f"{documento['numero']}.pdf"
+
     )
 
 
@@ -1177,4 +1451,5 @@ if __name__ == "__main__":
         port=5000,
 
         debug=True
+
     )
