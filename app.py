@@ -58,7 +58,11 @@ from ventas import (
 from generador_pdf import generar_pdf
 
 
-app = Flask(__name__)
+app = Flask(
+    __name__,
+    template_folder="09_TEMPLATES",
+    static_folder="17_STATIC"
+)
 
 app.secret_key = os.getenv(
     "FLASK_SECRET_KEY",
