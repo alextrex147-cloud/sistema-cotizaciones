@@ -1,14 +1,20 @@
-from .conexion import supabase
+from conexion import supabase
 
 
 def listar_clientes(busqueda=""):
-    consulta = supabase.table("clientes").select("*").order(
+
+    consulta = supabase.table(
+        "clientes"
+    ).select("*").order(
         "nombre",
         desc=False
     )
 
     if busqueda:
-        consulta = consulta.ilike("nombre", f"%{busqueda}%")
+        consulta = consulta.ilike(
+            "nombre",
+            f"%{busqueda}%"
+        )
 
     respuesta = consulta.execute()
 
@@ -16,7 +22,10 @@ def listar_clientes(busqueda=""):
 
 
 def obtener_cliente(cliente_id):
-    respuesta = supabase.table("clientes").select("*").eq(
+
+    respuesta = supabase.table(
+        "clientes"
+    ).select("*").eq(
         "id",
         cliente_id
     ).single().execute()
@@ -25,7 +34,10 @@ def obtener_cliente(cliente_id):
 
 
 def buscar_por_nombre(nombre):
-    respuesta = supabase.table("clientes").select("*").ilike(
+
+    respuesta = supabase.table(
+        "clientes"
+    ).select("*").ilike(
         "nombre",
         nombre
     ).limit(1).execute()
@@ -36,20 +48,34 @@ def buscar_por_nombre(nombre):
     return None
 
 
-def crear_o_actualizar_cliente(nombre, telefono):
-    existente = buscar_por_nombre(nombre)
+def crear_o_actualizar_cliente(
+    nombre,
+    telefono
+):
+
+    existente = buscar_por_nombre(
+        nombre
+    )
 
     if existente:
-        respuesta = supabase.table("clientes").update({
+
+        respuesta = supabase.table(
+            "clientes"
+        ).update({
             "telefono": telefono
         }).eq(
             "id",
             existente["id"]
         ).execute()
 
-        return respuesta.data[0] if respuesta.data else existente
+        if respuesta.data:
+            return respuesta.data[0]
 
-    respuesta = supabase.table("clientes").insert({
+        return existente
+
+    respuesta = supabase.table(
+        "clientes"
+    ).insert({
         "nombre": nombre,
         "telefono": telefono
     }).execute()
@@ -57,8 +83,15 @@ def crear_o_actualizar_cliente(nombre, telefono):
     return respuesta.data[0]
 
 
-def actualizar_cliente(cliente_id, nombre, telefono):
-    respuesta = supabase.table("clientes").update({
+def actualizar_cliente(
+    cliente_id,
+    nombre,
+    telefono
+):
+
+    respuesta = supabase.table(
+        "clientes"
+    ).update({
         "nombre": nombre,
         "telefono": telefono
     }).eq(
@@ -70,7 +103,10 @@ def actualizar_cliente(cliente_id, nombre, telefono):
 
 
 def eliminar_cliente(cliente_id):
-    return supabase.table("clientes").delete().eq(
+
+    return supabase.table(
+        "clientes"
+    ).delete().eq(
         "id",
         cliente_id
     ).execute()
