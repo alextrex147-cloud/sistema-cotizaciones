@@ -1,76 +1,138 @@
 let items = [];
 
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
 
-    const tipo = document.getElementById("tipo");
+        const tipo =
+            document.getElementById("tipo");
 
-    if (tipo) {
-        actualizarTipo();
-    }
+        if (tipo) {
+            actualizarTipo();
+        }
 
 
-    const cliente = document.getElementById("cliente_nombre");
-    const telefono = document.getElementById("cliente_telefono");
+        const cliente =
+            document.getElementById(
+                "cliente_nombre"
+            );
 
-    if (cliente) {
+        const telefono =
+            document.getElementById(
+                "cliente_telefono"
+            );
 
-        cliente.addEventListener("change", function () {
 
-            const opciones =
-                document.querySelectorAll("#lista_clientes option");
+        if (cliente) {
 
-            for (const opcion of opciones) {
+            cliente.addEventListener(
+                "change",
+                function () {
 
-                if (opcion.value === cliente.value) {
+                    const opciones =
+                        document.querySelectorAll(
+                            "#lista_clientes option"
+                        );
 
-                    telefono.value =
-                        opcion.dataset.telefono || "";
+                    for (
+                        const opcion
+                        of opciones
+                    ) {
 
-                    break;
+                        if (
+                            opcion.value ===
+                            cliente.value
+                        ) {
+
+                            telefono.value =
+                                opcion.dataset
+                                    .telefono || "";
+
+                            break;
+                        }
+                    }
                 }
-            }
-        });
+            );
+        }
+
+
+        const precio =
+            document.getElementById(
+                "precio"
+            );
+
+
+        if (precio) {
+
+            precio.addEventListener(
+                "keydown",
+                function (e) {
+
+                    if (
+                        e.key === "Enter"
+                    ) {
+
+                        e.preventDefault();
+
+                        agregarProducto();
+                    }
+                }
+            );
+        }
+
+
+        cargarItemsExistentes();
     }
+);
 
 
-    const precio = document.getElementById("precio");
-
-    if (precio) {
-
-        precio.addEventListener("keydown", function (e) {
-
-            if (e.key === "Enter") {
-
-                e.preventDefault();
-
-                agregarProducto();
-            }
-        });
-    }
-
-
-    cargarItemsExistentes();
-});
-
+// =========================================================
+// TIPO
+// =========================================================
 
 function actualizarTipo() {
 
-    const tipo = document.getElementById("tipo");
-    const campo = document.getElementById("campo-medida");
-    const texto = document.getElementById("texto-medida");
-    const medida = document.getElementById("medida");
+    const tipo =
+        document.getElementById(
+            "tipo"
+        );
 
-    if (!tipo || !campo) {
+    const campo =
+        document.getElementById(
+            "campo-medida"
+        );
+
+    const texto =
+        document.getElementById(
+            "texto-medida"
+        );
+
+    const medida =
+        document.getElementById(
+            "medida"
+        );
+
+
+    if (
+        !tipo ||
+        !campo
+    ) {
+
         return;
     }
 
 
-    if (tipo.value === "normal") {
+    if (
+        tipo.value ===
+        "normal"
+    ) {
 
-        campo.style.display = "none";
+        campo.style.display =
+            "none";
 
         if (medida) {
+
             medida.value = "";
         }
 
@@ -78,58 +140,90 @@ function actualizarTipo() {
     }
 
 
-    campo.style.display = "block";
+    campo.style.display =
+        "block";
 
 
-    if (tipo.value === "metros") {
+    if (
+        tipo.value ===
+        "metros"
+    ) {
 
-        texto.textContent = "Metros por producto";
+        texto.textContent =
+            "Metros por producto";
 
-        medida.placeholder = "Ejemplo: 4";
-
+        medida.placeholder =
+            "Ejemplo: 4";
     }
 
 
-    if (tipo.value === "kilos") {
+    if (
+        tipo.value ===
+        "kilos"
+    ) {
 
-        texto.textContent = "Kilos por producto";
+        texto.textContent =
+            "Kilos por producto";
 
-        medida.placeholder = "Ejemplo: 10";
-
+        medida.placeholder =
+            "Ejemplo: 10";
     }
 }
 
 
-document.addEventListener("change", function (e) {
+document.addEventListener(
+    "change",
+    function (e) {
 
-    if (e.target && e.target.id === "tipo") {
+        if (
+            e.target &&
+            e.target.id ===
+                "tipo"
+        ) {
 
-        actualizarTipo();
+            actualizarTipo();
+        }
     }
-});
+);
 
+
+// =========================================================
+// AGREGAR PRODUCTO
+// =========================================================
 
 function agregarProducto() {
 
     const nombreCampo =
-        document.getElementById("nombre_producto");
+        document.getElementById(
+            "nombre_producto"
+        );
 
     const cantidadCampo =
-        document.getElementById("cantidad");
+        document.getElementById(
+            "cantidad"
+        );
 
     const tipoCampo =
-        document.getElementById("tipo");
+        document.getElementById(
+            "tipo"
+        );
 
     const medidaCampo =
-        document.getElementById("medida");
+        document.getElementById(
+            "medida"
+        );
 
     const precioCampo =
-        document.getElementById("precio");
+        document.getElementById(
+            "precio"
+        );
 
 
     if (!nombreCampo) {
 
-        alert("No se encontró el campo Producto.");
+        alert(
+            "No se encontró el campo Producto."
+        );
 
         return false;
     }
@@ -140,7 +234,9 @@ function agregarProducto() {
 
 
     const cantidad =
-        parseFloat(cantidadCampo.value);
+        parseFloat(
+            cantidadCampo.value
+        );
 
 
     const tipo =
@@ -148,7 +244,9 @@ function agregarProducto() {
 
 
     const precio =
-        parseFloat(precioCampo.value);
+        parseFloat(
+            precioCampo.value
+        );
 
 
     let medida = null;
@@ -156,7 +254,9 @@ function agregarProducto() {
 
     if (!nombre) {
 
-        alert("Escribe el nombre del producto.");
+        alert(
+            "Escribe el nombre del producto."
+        );
 
         nombreCampo.focus();
 
@@ -169,7 +269,9 @@ function agregarProducto() {
         cantidad <= 0
     ) {
 
-        alert("La cantidad debe ser mayor que 0.");
+        alert(
+            "La cantidad debe ser mayor que 0."
+        );
 
         cantidadCampo.focus();
 
@@ -182,7 +284,9 @@ function agregarProducto() {
         precio < 0
     ) {
 
-        alert("Escribe el precio.");
+        alert(
+            "Escribe el precio."
+        );
 
         precioCampo.focus();
 
@@ -196,7 +300,9 @@ function agregarProducto() {
     ) {
 
         medida =
-            parseFloat(medidaCampo.value);
+            parseFloat(
+                medidaCampo.value
+            );
 
 
         if (
@@ -204,13 +310,19 @@ function agregarProducto() {
             medida <= 0
         ) {
 
-            if (tipo === "metros") {
+            if (
+                tipo === "metros"
+            ) {
 
-                alert("Escribe los metros por producto.");
+                alert(
+                    "Escribe los metros por producto."
+                );
 
             } else {
 
-                alert("Escribe los kilos por producto.");
+                alert(
+                    "Escribe los kilos por producto."
+                );
             }
 
             medidaCampo.focus();
@@ -243,33 +355,45 @@ function agregarProducto() {
 
     items.push({
 
-        producto_id: null,
+        producto_id:
+            null,
 
-        nombre_producto: nombre,
+        nombre_producto:
+            nombre,
 
-        cantidad: cantidad,
+        cantidad:
+            cantidad,
 
-        tipo: tipo,
+        tipo:
+            tipo,
 
-        medida: medida,
+        medida:
+            medida,
 
-        precio: precio,
+        precio:
+            precio,
 
-        total: Number(total.toFixed(2))
-
+        total:
+            Number(
+                total.toFixed(2)
+            )
     });
 
 
     mostrarItems();
 
 
-    nombreCampo.value = "";
+    nombreCampo.value =
+        "";
 
-    cantidadCampo.value = "1";
+    cantidadCampo.value =
+        "1";
 
-    precioCampo.value = "";
+    precioCampo.value =
+        "";
 
-    medidaCampo.value = "1";
+    medidaCampo.value =
+        "1";
 
 
     actualizarTipo();
@@ -282,102 +406,145 @@ function agregarProducto() {
 }
 
 
+// =========================================================
+// MOSTRAR PRODUCTOS
+// =========================================================
+
 function mostrarItems() {
 
     const body =
-        document.getElementById("items-body");
+        document.getElementById(
+            "items-body"
+        );
 
 
     if (!body) {
+
         return;
     }
 
 
-    body.innerHTML = "";
+    body.innerHTML =
+        "";
 
 
-    let totalGeneral = 0;
+    let totalGeneral =
+        0;
 
 
-    items.forEach(function (item, index) {
+    items.forEach(
+        function (
+            item,
+            index
+        ) {
 
-        totalGeneral += Number(item.total);
+            totalGeneral +=
+                Number(
+                    item.total
+                );
 
 
-        const fila =
-            document.createElement("tr");
+            const fila =
+                document.createElement(
+                    "tr"
+                );
 
 
-        let medidaTexto = "-";
+            let medidaTexto =
+                "-";
 
 
-        if (item.medida !== null) {
+            if (
+                item.medida !==
+                null
+            ) {
 
-            if (item.tipo === "metros") {
+                if (
+                    item.tipo ===
+                    "metros"
+                ) {
 
-                medidaTexto =
-                    item.medida + " m";
+                    medidaTexto =
+                        item.medida +
+                        " m";
 
-            } else if (item.tipo === "kilos") {
+                } else if (
+                    item.tipo ===
+                    "kilos"
+                ) {
 
-                medidaTexto =
-                    item.medida + " kg";
+                    medidaTexto =
+                        item.medida +
+                        " kg";
 
-            } else {
+                } else {
 
-                medidaTexto =
-                    item.medida;
+                    medidaTexto =
+                        item.medida;
+                }
             }
+
+
+            fila.innerHTML = `
+
+                <td>
+                    ${escapeHtml(
+                        item.nombre_producto
+                    )}
+                </td>
+
+                <td>
+                    ${item.cantidad}
+                </td>
+
+                <td>
+                    ${escapeHtml(
+                        item.tipo
+                    )}
+                </td>
+
+                <td>
+                    ${medidaTexto}
+                </td>
+
+                <td>
+                    ${Number(
+                        item.precio
+                    ).toFixed(2)} Bs
+                </td>
+
+                <td>
+                    ${Number(
+                        item.total
+                    ).toFixed(2)} Bs
+                </td>
+
+                <td>
+
+                    <button
+                        type="button"
+                        class="btn rojo pequeño"
+                        onclick="eliminarItem(${index})"
+                    >
+                        🗑️
+                    </button>
+
+                </td>
+
+            `;
+
+
+            body.appendChild(
+                fila
+            );
         }
-
-
-        fila.innerHTML = `
-
-            <td>
-                ${escapeHtml(item.nombre_producto)}
-            </td>
-
-            <td>
-                ${item.cantidad}
-            </td>
-
-            <td>
-                ${escapeHtml(item.tipo)}
-            </td>
-
-            <td>
-                ${medidaTexto}
-            </td>
-
-            <td>
-                ${Number(item.precio).toFixed(2)} Bs
-            </td>
-
-            <td>
-                ${Number(item.total).toFixed(2)} Bs
-            </td>
-
-            <td>
-
-                <button
-                    type="button"
-                    class="btn rojo pequeño"
-                    onclick="eliminarItem(${index})"
-                >
-                    🗑️
-                </button>
-
-            </td>
-        `;
-
-
-        body.appendChild(fila);
-
-    });
+    );
 
 
     const total =
-        document.getElementById("total-general");
+        document.getElementById(
+            "total-general"
+        );
 
 
     if (total) {
@@ -391,56 +558,96 @@ function mostrarItems() {
 }
 
 
-function eliminarItem(index) {
+// =========================================================
+// ELIMINAR PRODUCTO
+// =========================================================
 
-    items.splice(index, 1);
+function eliminarItem(
+    index
+) {
+
+    items.splice(
+        index,
+        1
+    );
 
     mostrarItems();
 }
 
 
+// =========================================================
+// GUARDAR ITEMS EN EL FORMULARIO
+// =========================================================
+
 function sincronizarFormulario() {
 
     const campo =
-        document.getElementById("items_json");
+        document.getElementById(
+            "items_json"
+        );
 
 
     if (campo) {
 
         campo.value =
-            JSON.stringify(items);
+            JSON.stringify(
+                items
+            );
     }
 }
 
 
+// =========================================================
+// PREPARAR FORMULARIO
+// =========================================================
+
 function prepararFormulario() {
 
     const nombreCampo =
-        document.getElementById("nombre_producto");
+        document.getElementById(
+            "nombre_producto"
+        );
 
     const precioCampo =
-        document.getElementById("precio");
+        document.getElementById(
+            "precio"
+        );
 
 
     if (
+
         nombreCampo &&
+
         (
-            nombreCampo.value.trim() !== "" ||
+
+            nombreCampo.value
+                .trim() !== ""
+
+            ||
+
             (
                 precioCampo &&
-                precioCampo.value.trim() !== ""
+
+                precioCampo.value
+                    .trim() !== ""
             )
+
         )
+
     ) {
 
-        if (!agregarProducto()) {
+        if (
+            !agregarProducto()
+        ) {
 
             return false;
         }
     }
 
 
-    if (items.length === 0) {
+    if (
+        items.length === 0
+    ) {
 
         alert(
             "Agrega al menos un producto antes de guardar."
@@ -457,41 +664,99 @@ function prepararFormulario() {
 }
 
 
+// =========================================================
+// GUARDAR DIRECTAMENTE COMO VENTA
+// =========================================================
+
 function guardarComoVenta() {
 
-    if (!prepararFormulario()) {
+    if (
+        !prepararFormulario()
+    ) {
 
         return;
     }
 
 
-    document.getElementById(
-        "venta_cliente_nombre"
-    ).value =
+    const clienteNombre =
         document.getElementById(
             "cliente_nombre"
-        ).value;
+        );
 
-
-    document.getElementById(
-        "venta_cliente_telefono"
-    ).value =
+    const clienteTelefono =
         document.getElementById(
             "cliente_telefono"
-        ).value;
+        );
+
+    const ventaClienteNombre =
+        document.getElementById(
+            "venta_cliente_nombre"
+        );
+
+    const ventaClienteTelefono =
+        document.getElementById(
+            "venta_cliente_telefono"
+        );
+
+    const ventaItems =
+        document.getElementById(
+            "venta_items_json"
+        );
+
+    const formularioVenta =
+        document.getElementById(
+            "form-venta-oculto"
+        );
 
 
-    document.getElementById(
-        "venta_items_json"
-    ).value =
-        JSON.stringify(items);
+    if (
+        !formularioVenta
+    ) {
+
+        alert(
+            "No se encontró el formulario de venta."
+        );
+
+        return;
+    }
 
 
-    document.getElementById(
-        "form-venta-oculto"
-    ).submit();
+    if (
+        ventaClienteNombre
+    ) {
+
+        ventaClienteNombre.value =
+            clienteNombre.value;
+    }
+
+
+    if (
+        ventaClienteTelefono
+    ) {
+
+        ventaClienteTelefono.value =
+            clienteTelefono.value;
+    }
+
+
+    if (
+        ventaItems
+    ) {
+
+        ventaItems.value =
+            JSON.stringify(
+                items
+            );
+    }
+
+
+    formularioVenta.submit();
 }
 
+
+// =========================================================
+// CARGAR PRODUCTOS EXISTENTES
+// =========================================================
 
 function cargarItemsExistentes() {
 
@@ -505,7 +770,9 @@ function cargarItemsExistentes() {
 
 
     if (
-        !Array.isArray(detallesIniciales)
+        !Array.isArray(
+            detallesIniciales
+        )
     ) {
 
         return;
@@ -513,48 +780,68 @@ function cargarItemsExistentes() {
 
 
     items =
-        detallesIniciales.map(function (item) {
+        detallesIniciales.map(
+            function (item) {
 
-            return {
+                return {
 
-                producto_id: null,
+                    producto_id:
+                        null,
 
-                nombre_producto:
-                    item.nombre_producto,
+                    nombre_producto:
+                        item.nombre_producto,
 
-                cantidad:
-                    Number(item.cantidad),
+                    cantidad:
+                        Number(
+                            item.cantidad
+                        ),
 
-                tipo:
-                    item.tipo,
+                    tipo:
+                        item.tipo,
 
-                medida:
-                    item.medida === null
-                        ? null
-                        : Number(item.medida),
+                    medida:
+                        item.medida ===
+                        null
+                            ? null
+                            : Number(
+                                item.medida
+                            ),
 
-                precio:
-                    Number(item.precio),
+                    precio:
+                        Number(
+                            item.precio
+                        ),
 
-                total:
-                    Number(item.total)
-
-            };
-
-        });
+                    total:
+                        Number(
+                            item.total
+                        )
+                };
+            }
+        );
 
 
     mostrarItems();
 }
 
 
-function escapeHtml(text) {
+// =========================================================
+// SEGURIDAD HTML
+// =========================================================
+
+function escapeHtml(
+    text
+) {
 
     const div =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
+
 
     div.textContent =
         text;
+
 
     return div.innerHTML;
 }
