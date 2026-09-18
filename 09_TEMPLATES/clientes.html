@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+
+<h1>👤 CLIENTES</h1>
+
+
+<div class="tabla-contenedor">
+
+    <form
+        method="GET"
+        class="buscar"
+    >
+
+        <input
+            type="text"
+            name="buscar"
+            placeholder="🔍 Buscar cliente..."
+            value="{{ buscar }}"
+        >
+
+        <button class="btn">
+            BUSCAR
+        </button>
+
+    </form>
+
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <th>NOMBRE</th>
+                <th>TELÉFONO</th>
+                <th>ACCIONES</th>
+
+            </tr>
+
+        </thead>
+
+
+        <tbody>
+
+        {% for c in clientes %}
+
+            <tr>
+
+                <form
+                    method="POST"
+                    action="{{ url_for('cliente_editar', cliente_id=c.id) }}"
+                >
+
+                    <td>
+
+                        <input
+                            name="nombre"
+                            value="{{ c.nombre }}"
+                        >
+
+                    </td>
+
+                    <td>
+
+                        <input
+                            name="telefono"
+                            value="{{ c.telefono }}"
+                        >
+
+                    </td>
+
+                    <td>
+
+                        <button class="btn pequeño">
+                            💾
+                        </button>
+
+                        <a
+                            class="btn rojo pequeño"
+                            href="{{ url_for('cliente_eliminar', cliente_id=c.id) }}"
+                            onclick="return confirm('¿Eliminar cliente?')"
+                        >
+                            🗑️
+                        </a>
+
+                    </td>
+
+                </form>
+
+            </tr>
+
+        {% else %}
+
+            <tr>
+
+                <td colspan="3">
+                    No hay clientes.
+                </td>
+
+            </tr>
+
+        {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}
