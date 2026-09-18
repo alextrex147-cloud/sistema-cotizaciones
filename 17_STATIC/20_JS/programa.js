@@ -54,10 +54,6 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 
-/* =========================================================
-   MOSTRAR / OCULTAR MEDIDA
-   ========================================================= */
-
 function actualizarTipo() {
 
     const tipo = document.getElementById("tipo");
@@ -89,24 +85,20 @@ function actualizarTipo() {
 
         texto.textContent = "Metros por producto";
 
-        if (medida) {
-            medida.placeholder = "Ejemplo: 4";
-        }
+        medida.placeholder = "Ejemplo: 4";
 
-    } else if (tipo.value === "kilos") {
+    }
+
+
+    if (tipo.value === "kilos") {
 
         texto.textContent = "Kilos por producto";
 
-        if (medida) {
-            medida.placeholder = "Ejemplo: 10";
-        }
+        medida.placeholder = "Ejemplo: 10";
+
     }
 }
 
-
-/* =========================================================
-   CAMBIO DE TIPO
-   ========================================================= */
 
 document.addEventListener("change", function (e) {
 
@@ -116,10 +108,6 @@ document.addEventListener("change", function (e) {
     }
 });
 
-
-/* =========================================================
-   AGREGAR PRODUCTO
-   ========================================================= */
 
 function agregarProducto() {
 
@@ -139,14 +127,9 @@ function agregarProducto() {
         document.getElementById("precio");
 
 
-    if (
-        !nombreCampo ||
-        !cantidadCampo ||
-        !tipoCampo ||
-        !precioCampo
-    ) {
+    if (!nombreCampo) {
 
-        alert("No se encontraron los campos del producto.");
+        alert("No se encontró el campo Producto.");
 
         return false;
     }
@@ -171,10 +154,6 @@ function agregarProducto() {
     let medida = null;
 
 
-    /* -------------------------
-       VALIDAR NOMBRE
-       ------------------------- */
-
     if (!nombre) {
 
         alert("Escribe el nombre del producto.");
@@ -184,10 +163,6 @@ function agregarProducto() {
         return false;
     }
 
-
-    /* -------------------------
-       VALIDAR CANTIDAD
-       ------------------------- */
 
     if (
         Number.isNaN(cantidad) ||
@@ -202,26 +177,18 @@ function agregarProducto() {
     }
 
 
-    /* -------------------------
-       VALIDAR PRECIO
-       ------------------------- */
-
     if (
         Number.isNaN(precio) ||
         precio < 0
     ) {
 
-        alert("Escribe el precio del producto.");
+        alert("Escribe el precio.");
 
         precioCampo.focus();
 
         return false;
     }
 
-
-    /* -------------------------
-       VALIDAR METROS / KILOS
-       ------------------------- */
 
     if (
         tipo === "metros" ||
@@ -253,11 +220,7 @@ function agregarProducto() {
     }
 
 
-    /* -------------------------
-       CALCULAR TOTAL
-       ------------------------- */
-
-    let total = 0;
+    let total;
 
 
     if (
@@ -278,10 +241,6 @@ function agregarProducto() {
     }
 
 
-    /* -------------------------
-       GUARDAR PRODUCTO
-       ------------------------- */
-
     items.push({
 
         producto_id: null,
@@ -296,22 +255,13 @@ function agregarProducto() {
 
         precio: precio,
 
-        total: Number(
-            total.toFixed(2)
-        )
+        total: Number(total.toFixed(2))
+
     });
 
 
-    /* -------------------------
-       MOSTRAR
-       ------------------------- */
-
     mostrarItems();
 
-
-    /* -------------------------
-       LIMPIAR PARA SIGUIENTE
-       ------------------------- */
 
     nombreCampo.value = "";
 
@@ -331,10 +281,6 @@ function agregarProducto() {
     return true;
 }
 
-
-/* =========================================================
-   MOSTRAR PRODUCTOS
-   ========================================================= */
 
 function mostrarItems() {
 
@@ -445,10 +391,6 @@ function mostrarItems() {
 }
 
 
-/* =========================================================
-   ELIMINAR PRODUCTO
-   ========================================================= */
-
 function eliminarItem(index) {
 
     items.splice(index, 1);
@@ -456,10 +398,6 @@ function eliminarItem(index) {
     mostrarItems();
 }
 
-
-/* =========================================================
-   GUARDAR ITEMS EN EL FORMULARIO
-   ========================================================= */
 
 function sincronizarFormulario() {
 
@@ -475,10 +413,6 @@ function sincronizarFormulario() {
 }
 
 
-/* =========================================================
-   PREPARAR PARA GUARDAR
-   ========================================================= */
-
 function prepararFormulario() {
 
     const nombreCampo =
@@ -488,17 +422,14 @@ function prepararFormulario() {
         document.getElementById("precio");
 
 
-    /*
-       Si el usuario escribió un producto
-       pero todavía no presionó ENTER,
-       lo agregamos automáticamente.
-    */
-
     if (
         nombreCampo &&
         (
             nombreCampo.value.trim() !== "" ||
-            (precioCampo && precioCampo.value.trim() !== "")
+            (
+                precioCampo &&
+                precioCampo.value.trim() !== ""
+            )
         )
     ) {
 
@@ -526,10 +457,6 @@ function prepararFormulario() {
 }
 
 
-/* =========================================================
-   GUARDAR COMO VENTA
-   ========================================================= */
-
 function guardarComoVenta() {
 
     if (!prepararFormulario()) {
@@ -538,23 +465,20 @@ function guardarComoVenta() {
     }
 
 
-    const clienteNombre =
-        document.getElementById("cliente_nombre");
-
-    const clienteTelefono =
-        document.getElementById("cliente_telefono");
-
-
     document.getElementById(
         "venta_cliente_nombre"
     ).value =
-        clienteNombre.value;
+        document.getElementById(
+            "cliente_nombre"
+        ).value;
 
 
     document.getElementById(
         "venta_cliente_telefono"
     ).value =
-        clienteTelefono.value;
+        document.getElementById(
+            "cliente_telefono"
+        ).value;
 
 
     document.getElementById(
@@ -568,10 +492,6 @@ function guardarComoVenta() {
     ).submit();
 }
 
-
-/* =========================================================
-   CARGAR PRODUCTOS EXISTENTES
-   ========================================================= */
 
 function cargarItemsExistentes() {
 
@@ -597,8 +517,7 @@ function cargarItemsExistentes() {
 
             return {
 
-                producto_id:
-                    null,
+                producto_id: null,
 
                 nombre_producto:
                     item.nombre_producto,
@@ -619,6 +538,7 @@ function cargarItemsExistentes() {
 
                 total:
                     Number(item.total)
+
             };
 
         });
@@ -628,19 +548,13 @@ function cargarItemsExistentes() {
 }
 
 
-/* =========================================================
-   SEGURIDAD HTML
-   ========================================================= */
-
 function escapeHtml(text) {
 
     const div =
         document.createElement("div");
 
-
     div.textContent =
         text;
-
 
     return div.innerHTML;
 }
