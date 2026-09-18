@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+
+<h1>🏠 INICIO</h1>
+
+<div class="tarjetas">
+
+    <a
+        href="{{ url_for('cotizaciones') }}"
+        class="tarjeta"
+    >
+
+        <div class="icono">🧾</div>
+
+        <h2>COTIZACIONES</h2>
+
+        <strong>
+            {{ cantidad_cotizaciones }}
+        </strong>
+
+    </a>
+
+
+    <a
+        href="{{ url_for('ventas') }}"
+        class="tarjeta"
+    >
+
+        <div class="icono">💰</div>
+
+        <h2>VENTAS</h2>
+
+        <strong>
+            {{ cantidad_ventas }}
+        </strong>
+
+    </a>
+
+
+    <a
+        href="{{ url_for('productos') }}"
+        class="tarjeta"
+    >
+
+        <div class="icono">📦</div>
+
+        <h2>PRODUCTOS</h2>
+
+        <strong>
+            {{ cantidad_productos }}
+        </strong>
+
+    </a>
+
+
+    <a
+        href="{{ url_for('clientes') }}"
+        class="tarjeta"
+    >
+
+        <div class="icono">👤</div>
+
+        <h2>CLIENTES</h2>
+
+        <strong>
+            {{ cantidad_clientes }}
+        </strong>
+
+    </a>
+
+</div>
+
+
+<div class="acciones">
+
+    <h2>⚡ ACCIONES RÁPIDAS</h2>
+
+    <div class="botones">
+
+        <a
+            class="btn principal"
+            href="{{ url_for('nueva_cotizacion') }}"
+        >
+            🧾 NUEVA COTIZACIÓN
+        </a>
+
+        <a
+            class="btn verde"
+            href="{{ url_for('nueva_venta') }}"
+        >
+            💰 NUEVA VENTA
+        </a>
+
+        <a
+            class="btn"
+            href="{{ url_for('productos') }}"
+        >
+            📦 PRODUCTOS
+        </a>
+
+        <a
+            class="btn"
+            href="{{ url_for('clientes') }}"
+        >
+            👤 CLIENTES
+        </a>
+
+    </div>
+
+</div>
+
+
+<div class="tabla-contenedor">
+
+    <h2>📋 ÚLTIMOS REGISTROS</h2>
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <th>TIPO</th>
+                <th>NÚMERO</th>
+                <th>CLIENTE</th>
+                <th>TOTAL</th>
+                <th>FECHA</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+        {% for r in registros %}
+
+            <tr>
+
+                <td>
+                    {% if r.tipo == "Venta" %}
+                        💰 Venta
+                    {% else %}
+                        🧾 Cotización
+                    {% endif %}
+                </td>
+
+                <td>
+                    {{ r.numero }}
+                </td>
+
+                <td>
+                    {{ r.cliente }}
+                </td>
+
+                <td>
+                    {{ "%.2f"|format(r.total|float) }} Bs
+                </td>
+
+                <td>
+                    {{ r.fecha }}
+                </td>
+
+            </tr>
+
+        {% else %}
+
+            <tr>
+
+                <td colspan="5">
+                    No existen registros.
+                </td>
+
+            </tr>
+
+        {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}
