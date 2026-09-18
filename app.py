@@ -57,7 +57,13 @@ from ventas import (
 )
 
 from generador_pdf import generar_pdf
-
+from impresiones import (
+    crear_impresion,
+    obtener_pendiente,
+    marcar_impreso,
+    marcar_error,
+    listar_impresiones
+)
 
 # =========================================================
 # CONFIGURACIÓN
