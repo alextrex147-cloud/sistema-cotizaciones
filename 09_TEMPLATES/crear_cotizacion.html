@@ -2,168 +2,470 @@
 {% extends "base.html" %}
 
 {% block contenido %}
+
+{% set es_venta = modo in ["venta_nueva", "venta_editar", "venta_ver"] %}
+{% set es_nuevo = modo in ["nueva", "venta_nueva"] %}
+{% set es_edicion = modo in ["editar", "venta_editar"] %}
+{% set es_vista = modo in ["ver", "venta_ver"] %}
+
+{% if documento and documento.clientes %}
+    {% set cliente_actual = documento.clientes %}
+{% else %}
+    {% set cliente_actual = {} %}
+{% endif %}
+
 <style>
 .contenedor-cotizacion {
-    max-width: 1100px;
-    margin: 20px auto;
+    max-width: 1150px;
+    margin: 25px auto;
     padding: 20px;
 }
 .bloque {
-    background: white;
+    background: #fff;
     border: 1px solid #ddd;
     border-radius: 12px;
-    padding: 20px;
+    padding: 22px;
     margin-bottom: 20px;
 }
 .campos {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 15px;
+    gap: 16px;
 }
 .campo {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 7px;
+    min-width: 0;
 }
-.campo input, .campo select, .producto-fila input,
+.campo input,
+.campo select,
+.campo textarea,
+.producto-fila input,
 .producto-fila select {
     width: 100%;
     box-sizing: border-box;
-    padding: 10px;
+    padding: 11px;
     border: 1px solid #ccc;
-    border-radius: 6px;
+    border-radius: 7px;
+    font-size: 15px;
 }
 .producto-fila {
     display: grid;
-    grid-template-columns: 2fr 0.8fr 1fr 1fr 1fr auto;
-    gap: 10px;
+    grid-template-columns: 2fr .8fr 1fr 1fr 1fr auto;
+    gap: 12px;
     align-items: end;
-    padding: 15px 0;
+    padding: 16px 0;
     border-bottom: 1px solid #eee;
 }
 .boton {
+    display: inline-block;
     border: 0;
     border-radius: 7px;
     padding: 11px 16px;
-    cursor: pointer;
-    font-weight: bold;
     margin: 5px 3px;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: bold;
 }
-.boton-agregar { background: #e8f0ff; color: #173b79; }
-.boton-eliminar { background: #ffe7e7; color: #a40000; }
-.boton-guardar { background: #167d45; color: white; }
+.boton-agregar {
+    background: #e8f0ff;
+    color: #173b79;
+}
+.boton-eliminar {
+    background: #ffe7e7;
+    color: #a40000;
+}
+.boton-guardar {
+    background: #167d45;
+    color: white;
+}
+.boton-venta {
+    background: #145da0;
+    color: white;
+}
+.boton-cancelar {
+    background: #eee;
+    color: #222;
+}
 .total-caja {
     text-align: right;
-    font-size: 1.4rem;
+    font-size: 1.5rem;
+    font-weight: bold;
+    padding: 22px 0;
+}
+.tabla-contenedor {
+    overflow-x: auto;
+}
+.tabla-documento {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+.tabla-documento th,
+.tabla-documento td {
+    padding: 12px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+.tabla-documento th {
+    background: #f2f4f7;
+}
+.total-final {
+    text-align: right;
+    font-size: 1.5rem;
     font-weight: bold;
     padding: 20px 0;
 }
-@media (max-width: 750px) {
-    .producto-fila { grid-template-columns: 1fr 1fr; }
-    .producto-fila .campo-producto { grid-column: 1 / -1; }
+.mensaje {
+    color: #555;
+    margin-bottom: 18px;
+}
+@media (max-width: 800px) {
+    .contenedor-cotizacion {
+        padding: 10px;
+    }
+    .producto-fila {
+        grid-template-columns: 1fr 1fr;
+    }
+    .producto-fila .campo-producto {
+        grid-column: 1 / -1;
+    }
+}
+@media print {
+    .no-imprimir,
+    nav,
+    header,
+    footer {
+        display: none !important;
+    }
+    .contenedor-cotizacion,
+    .bloque {
+        border: 0;
+        box-shadow: none;
+        margin: 0;
+        padding: 8px;
+    }
 }
 </style>
 
 <div class="contenedor-cotizacion">
-    <h1>🧾 Crear cotización</h1>
 
-    <form method="POST"
-          action="{{ url_for('guardar_cotizacion') }}"
-          id="formCotizacion">
+    {% if modo == "nueva" %}
+        <h1>🧾 NUEVA COTIZACIÓN</h1>
+    {% elif modo == "venta_nueva" %}
+        <h1>💰 NUEVA VENTA</h1>
+    {% elif modo == "editar" %}
+        <h1>✏️ EDITAR COTIZACIÓN {{ documento.numero }}</h1>
+    {% elif modo == "venta_editar" %}
+        <h1>✏️ EDITAR VENTA {{ documento.numero }}</h1>
+    {% elif modo == "ver" %}
+        <h1>🧾 COTIZACIÓN {{ documento.numero }}</h1>
+    {% elif modo == "venta_ver" %}
+        <h1>💰 VENTA {{ documento.numero }}</h1>
+    {% endif %}
+
+    {% if es_vista %}
 
         <section class="bloque">
             <h2>Datos del cliente</h2>
 
-            <div class="campos">
-                <div class="campo">
-                    <label for="cliente">Nombre del cliente *</label>
-                    <input type="text" id="cliente" name="cliente"
-                           placeholder="Nombre completo" required>
-                </div>
+            <p>
+                <strong>Nombre:</strong>
+                {{ cliente_actual.nombre or "Sin cliente" }}
+            </p>
 
-                <div class="campo">
-                    <label for="telefono">Teléfono</label>
-                    <input type="tel" id="telefono" name="telefono"
-                           placeholder="Número de teléfono">
-                </div>
+            <p>
+                <strong>Teléfono:</strong>
+                {{ cliente_actual.telefono or "No registrado" }}
+            </p>
 
-                <div class="campo">
-                    <label for="responsable">Responsable *</label>
-                    <select id="responsable" name="responsable" required>
-                        <option value="">Seleccionar responsable</option>
-                        <option value="José Luis Quenta">José Luis Quenta</option>
-                        <option value="Ayudante">Ayudante</option>
-                        <option value="Felipa">Felipa</option>
-                    </select>
-                </div>
-            </div>
+            {% if documento.responsable %}
+            <p>
+                <strong>Responsable:</strong>
+                {{ documento.responsable }}
+            </p>
+            {% endif %}
         </section>
 
         <section class="bloque">
-            <h2>Productos de la cotización</h2>
+            <h2>Detalle de productos</h2>
 
-            <p>
-                Escribe libremente el nombre del producto.
-                No necesitas registrarlo en un catálogo.
-            </p>
+            <div class="tabla-contenedor">
+                <table class="tabla-documento">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
+                            <th>Tipo</th>
+                            <th>Medida</th>
+                            <th>Precio</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
 
-            <div id="listaProductos"></div>
-
-            <button type="button" class="boton boton-agregar"
-                    id="btnAgregar">
-                ➕ Agregar producto
-            </button>
-
-            <div class="total-caja">
-                Total: <span id="totalVisible">0.00</span> Bs
+                    <tbody>
+                        {% for item in detalles %}
+                        <tr>
+                            <td>{{ item.nombre_producto }}</td>
+                            <td>{{ item.cantidad }}</td>
+                            <td>{{ item.tipo }}</td>
+                            <td>
+                                {% if item.medida %}
+                                    {{ item.medida }}
+                                    {% if item.tipo == "metros" %}
+                                        m
+                                    {% elif item.tipo == "kilos" %}
+                                        kg
+                                    {% endif %}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ "%.2f"|format(item.precio|float) }} Bs
+                            </td>
+                            <td>
+                                {{ "%.2f"|format(item.total|float) }} Bs
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6">No hay productos registrados.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
 
-            <input type="hidden" name="items_json" id="items_json">
-
-            <div class="campo">
-                <label for="observaciones">Observaciones</label>
-                <textarea id="observaciones" name="observaciones"
-                          rows="3"
-                          placeholder="Observaciones opcionales"></textarea>
+            <div class="total-final">
+                TOTAL:
+                {{ "%.2f"|format(documento.total|float) }} Bs
             </div>
         </section>
 
-        <button type="submit" class="boton boton-guardar">
-            💾 Guardar cotización
-        </button>
+        <div class="no-imprimir">
+            {% if modo == "ver" %}
+                <a class="boton boton-agregar"
+                   href="{{ url_for('editar_cotizacion', cotizacion_id=documento.id) }}">
+                    ✏️ Editar cotización
+                </a>
 
-        <a href="{{ url_for('inicio') }}" class="boton">
-            Cancelar
-        </a>
-    </form>
+                <a class="boton boton-venta"
+                   href="{{ url_for('convertir_cotizacion_ruta', cotizacion_id=documento.id) }}">
+                    💰 Pasar a venta
+                </a>
+
+                <a class="boton boton-cancelar"
+                   href="{{ url_for('ver_pdf_cotizacion', cotizacion_id=documento.id) }}"
+                   target="_blank">
+                    📄 Abrir PDF
+                </a>
+
+            {% else %}
+                <a class="boton boton-agregar"
+                   href="{{ url_for('editar_venta', venta_id=documento.id) }}">
+                    ✏️ Editar venta
+                </a>
+
+                <a class="boton boton-cancelar"
+                   href="{{ url_for('ver_pdf_venta', venta_id=documento.id) }}"
+                   target="_blank">
+                    📄 Abrir PDF
+                </a>
+            {% endif %}
+
+            <button type="button" class="boton boton-cancelar"
+                    onclick="window.print()">
+                🖨️ Imprimir
+            </button>
+
+            <a class="boton boton-cancelar"
+               href="{{ url_for('inicio') }}">
+                Volver al inicio
+            </a>
+        </div>
+
+    {% else %}
+
+        <form method="POST"
+              id="formulario-documento"
+              action="{% if modo == 'nueva' %}
+                          {{ url_for('guardar_cotizacion') }}
+                      {% elif modo == 'editar' %}
+                          {{ url_for('actualizar_cotizacion_ruta', cotizacion_id=documento.id) }}
+                      {% elif modo == 'venta_nueva' %}
+                          {{ url_for('guardar_venta') }}
+                      {% else %}
+                          {{ url_for('actualizar_venta_ruta', venta_id=documento.id) }}
+                      {% endif %}">
+
+            <section class="bloque">
+                <h2>👤 Datos del cliente</h2>
+
+                <div class="campos">
+                    <div class="campo">
+                        <label for="cliente_nombre">Nombre del cliente *</label>
+
+                        <input type="text"
+                               id="cliente_nombre"
+                               name="cliente_nombre"
+                               list="lista_clientes"
+                               value="{{ cliente_actual.nombre or '' }}"
+                               placeholder="Escribe el nombre del cliente"
+                               required>
+
+                        <datalist id="lista_clientes">
+                            {% for c in clientes %}
+                                <option value="{{ c.nombre }}"></option>
+                            {% endfor %}
+                        </datalist>
+                    </div>
+
+                    <div class="campo">
+                        <label for="cliente_telefono">Número de teléfono</label>
+
+                        <input type="tel"
+                               id="cliente_telefono"
+                               name="cliente_telefono"
+                               value="{{ cliente_actual.telefono or '' }}"
+                               placeholder="Número de teléfono">
+                    </div>
+
+                    <div class="campo">
+                        <label for="responsable">Responsable *</label>
+
+                        <select id="responsable"
+                                name="responsable"
+                                required>
+                            <option value="">Seleccionar responsable</option>
+
+                            {% for r in responsables %}
+                                <option value="{{ r.nombre if r.nombre is defined else r }}"
+                                    {% if documento and documento.responsable == (r.nombre if r.nombre is defined else r) %}
+                                        selected
+                                    {% endif %}>
+                                    {{ r.nombre if r.nombre is defined else r }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <section class="bloque">
+                <h2>📦 Productos</h2>
+
+                <p class="mensaje">
+                    Escribe el nombre de cada producto. No necesitas registrar
+                    precios ni crear un catálogo para agregarlo a la cotización.
+                </p>
+
+                <div id="listaProductos"></div>
+
+                <button type="button"
+                        class="boton boton-agregar"
+                        id="btnAgregar">
+                    ➕ Agregar producto
+                </button>
+
+                <div class="total-caja">
+                    Total: <span id="totalVisible">0.00</span> Bs
+                </div>
+
+                <input type="hidden"
+                       name="items_json"
+                       id="items_json">
+
+                <div class="campo">
+                    <label for="observaciones">Observaciones</label>
+                    <textarea id="observaciones"
+                              name="observaciones"
+                              rows="3"
+                              placeholder="Observaciones opcionales"></textarea>
+                </div>
+            </section>
+
+            <div class="no-imprimir">
+                {% if modo == "nueva" %}
+                    <button type="submit"
+                            class="boton boton-guardar">
+                        💾 Guardar cotización
+                    </button>
+
+                    <button type="submit"
+                            class="boton boton-venta"
+                            formaction="{{ url_for('guardar_venta') }}">
+                        💰 Guardar directamente como venta
+                    </button>
+
+                {% elif modo == "venta_nueva" %}
+                    <button type="submit" class="boton boton-guardar">
+                        💾 Guardar venta
+                    </button>
+
+                {% elif modo == "editar" %}
+                    <button type="submit" class="boton boton-guardar">
+                        💾 Actualizar cotización
+                    </button>
+
+                {% else %}
+                    <button type="submit" class="boton boton-guardar">
+                        💾 Actualizar venta
+                    </button>
+                {% endif %}
+
+                <a href="{{ url_for('inicio') }}"
+                   class="boton boton-cancelar">
+                    Cancelar
+                </a>
+            </div>
+
+        </form>
+
+    {% endif %}
 </div>
 
+{% if not es_vista %}
 <script>
 "use strict";
 
 const listaProductos = document.getElementById("listaProductos");
 const totalVisible = document.getElementById("totalVisible");
 const itemsJson = document.getElementById("items_json");
+const formulario = document.getElementById("formulario-documento");
 
-let productos = [];
 let siguienteId = 1;
 
-function nuevoProducto() {
-    productos.push({
-        id: siguienteId++,
-        producto: "",
-        cantidad: 1,
-        tipo: "normal",
-        medida: 1,
-        precio: 0
-    });
+const detallesIniciales = {{ detalles | default([], true) | tojson }};
 
-    dibujarProductos();
-}
+let productos = detallesIniciales.map(item => ({
+    id: siguienteId++,
+    nombre_producto: item.nombre_producto || "",
+    cantidad: Number(item.cantidad || 1),
+    tipo: item.tipo || "normal",
+    medida: Number(item.medida || 1),
+    precio: Number(item.precio || 0)
+}));
 
 function numeroSeguro(valor) {
     const numero = Number(valor);
     return Number.isFinite(numero) ? numero : 0;
+}
+
+function dinero(valor) {
+    return numeroSeguro(valor).toFixed(2);
+}
+
+function escaparHTML(texto) {
+    return String(texto).replace(/[&<>"']/g, caracter => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    })[caracter]);
 }
 
 function subtotal(producto) {
@@ -178,21 +480,29 @@ function subtotal(producto) {
     return cantidad * precio;
 }
 
-function dinero(valor) {
-    return numeroSeguro(valor).toFixed(2);
-}
+function actualizarTotales() {
+    let total = 0;
 
-function escaparHTML(texto) {
-    return String(texto).replace(/[&<>"']/g, caracter => {
-        const entidades = {
-            "&": "&amp;",
-            "<": "&lt;",
-            ">": "&gt;",
-            '"': "&quot;",
-            "'": "&#39;"
-        };
-        return entidades[caracter];
+    productos.forEach(producto => {
+        total += subtotal(producto);
+
+        const fila = listaProductos.querySelector(
+            '[data-id="' + producto.id + '"]'
+        );
+
+        if (fila) {
+            const etiqueta = fila.querySelector(".subtotal");
+            if (etiqueta) {
+                etiqueta.textContent = dinero(subtotal(producto));
+            }
+        }
     });
+
+    totalVisible.textContent = dinero(total);
+
+    itemsJson.value = JSON.stringify(
+        productos.map(({ id, ...producto }) => producto)
+    );
 }
 
 function dibujarProductos() {
@@ -205,10 +515,10 @@ function dibujarProductos() {
 
         fila.innerHTML = `
             <div class="campo campo-producto">
-                <label>Producto *</label>
+                <label>Nombre del producto *</label>
                 <input type="text"
-                       data-campo="producto"
-                       value="${escaparHTML(producto.producto)}"
+                       data-campo="nombre_producto"
+                       value="${escaparHTML(producto.nombre_producto)}"
                        placeholder="Ej. Calamina trapezoidal"
                        required>
             </div>
@@ -217,8 +527,10 @@ function dibujarProductos() {
                 <label>Cantidad *</label>
                 <input type="number"
                        data-campo="cantidad"
-                       min="0.01" step="any"
-                       value="${producto.cantidad}" required>
+                       min="0.01"
+                       step="any"
+                       value="${producto.cantidad}"
+                       required>
             </div>
 
             <div class="campo">
@@ -245,30 +557,44 @@ function dibujarProductos() {
                       producto.tipo === "kilos" ? "Kilos por unidad" :
                       "Medida"}
                 </label>
+
                 <input type="number"
                        data-campo="medida"
-                       min="0.01" step="any"
+                       min="0.01"
+                       step="any"
                        value="${producto.medida}"
-                       ${producto.tipo === "normal" ? "disabled" : ""}>
+                       ${producto.tipo === "normal" ? "disabled" : ""}
+                       ${producto.tipo === "normal" ? "" : "required"}>
             </div>
 
             <div class="campo">
                 <label>
-                    Precio ${producto.tipo === "normal" ? "unitario" :
-                    producto.tipo === "metros" ? "por metro" : "por kilo"}
-                    (Bs) *
+                    Precio ${
+                        producto.tipo === "metros" ? "por metro" :
+                        producto.tipo === "kilos" ? "por kilo" :
+                        "unitario"
+                    } (Bs) *
                 </label>
+
                 <input type="number"
                        data-campo="precio"
-                       min="0" step="any"
-                       value="${producto.precio}" required>
-                <small>Subtotal: <span class="subtotal">${dinero(subtotal(producto))}</span> Bs</small>
+                       min="0"
+                       step="any"
+                       value="${producto.precio}"
+                       required>
+
+                <small>
+                    Subtotal:
+                    <strong class="subtotal">
+                        ${dinero(subtotal(producto))}
+                    </strong> Bs
+                </small>
             </div>
 
             <button type="button"
                     class="boton boton-eliminar"
                     data-eliminar="${producto.id}">
-                🗑️
+                🗑️ Eliminar
             </button>
         `;
 
@@ -278,28 +604,17 @@ function dibujarProductos() {
     actualizarTotales();
 }
 
-function actualizarTotales() {
-    let total = 0;
-
-    productos.forEach(producto => {
-        const importe = subtotal(producto);
-        total += importe;
-
-        const fila = listaProductos.querySelector(
-            '[data-id="' + producto.id + '"]'
-        );
-
-        if (fila) {
-            const etiqueta = fila.querySelector(".subtotal");
-            if (etiqueta) etiqueta.textContent = dinero(importe);
-        }
+function agregarProducto() {
+    productos.push({
+        id: siguienteId++,
+        nombre_producto: "",
+        cantidad: 1,
+        tipo: "normal",
+        medida: 1,
+        precio: 0
     });
 
-    totalVisible.textContent = dinero(total);
-
-    itemsJson.value = JSON.stringify(
-        productos.map(({id, ...producto}) => producto)
-    );
+    dibujarProductos();
 }
 
 listaProductos.addEventListener("input", evento => {
@@ -313,7 +628,7 @@ listaProductos.addEventListener("input", evento => {
     const producto = productos.find(p => p.id === id);
     if (!producto) return;
 
-    if (campo === "producto" || campo === "tipo") {
+    if (campo === "nombre_producto" || campo === "tipo") {
         producto[campo] = evento.target.value;
     } else {
         producto[campo] = numeroSeguro(evento.target.value);
@@ -323,32 +638,44 @@ listaProductos.addEventListener("input", evento => {
 });
 
 listaProductos.addEventListener("change", evento => {
-    if (evento.target.dataset.campo === "tipo") {
-        const fila = evento.target.closest(".producto-fila");
-        const id = Number(fila.dataset.id);
-        const producto = productos.find(p => p.id === id);
+    if (evento.target.dataset.campo !== "tipo") return;
 
-        if (producto) {
-            producto.tipo = evento.target.value;
-            dibujarProductos();
-        }
-    }
-});
+    const fila = evento.target.closest(".producto-fila");
+    if (!fila) return;
 
-listaProductos.addEventListener("click", evento => {
-    const idEliminar = evento.target.dataset.eliminar;
-    if (!idEliminar) return;
-
-    productos = productos.filter(
-        p => p.id !== Number(idEliminar)
+    const producto = productos.find(
+        p => p.id === Number(fila.dataset.id)
     );
+
+    if (!producto) return;
+
+    producto.tipo = evento.target.value;
+
+    if (producto.tipo === "normal") {
+        producto.medida = 1;
+    } else if (numeroSeguro(producto.medida) <= 0) {
+        producto.medida = 1;
+    }
 
     dibujarProductos();
 });
 
-document.getElementById("btnAgregar").addEventListener("click", nuevoProducto);
+listaProductos.addEventListener("click", evento => {
+    const boton = evento.target.closest("[data-eliminar]");
+    if (!boton) return;
 
-document.getElementById("formCotizacion").addEventListener("submit", evento => {
+    const id = Number(boton.dataset.eliminar);
+
+    productos = productos.filter(p => p.id !== id);
+    dibujarProductos();
+});
+
+document.getElementById("btnAgregar").addEventListener(
+    "click",
+    agregarProducto
+);
+
+formulario.addEventListener("submit", evento => {
     if (productos.length === 0) {
         evento.preventDefault();
         alert("Agrega al menos un producto.");
@@ -356,7 +683,7 @@ document.getElementById("formCotizacion").addEventListener("submit", evento => {
     }
 
     const invalido = productos.some(producto => {
-        if (!producto.producto.trim()) return true;
+        if (!producto.nombre_producto.trim()) return true;
         if (numeroSeguro(producto.cantidad) <= 0) return true;
         if (numeroSeguro(producto.precio) < 0) return true;
 
@@ -372,15 +699,21 @@ document.getElementById("formCotizacion").addEventListener("submit", evento => {
 
     if (invalido) {
         evento.preventDefault();
-        alert("Revisa los nombres, cantidades, medidas y precios.");
+        alert("Revisa los productos, cantidades, medidas y precios.");
         return;
     }
 
     itemsJson.value = JSON.stringify(
-        productos.map(({id, ...producto}) => producto)
+        productos.map(({ id, ...producto }) => producto)
     );
 });
 
-nuevoProducto();
+if (productos.length === 0) {
+    agregarProducto();
+} else {
+    dibujarProductos();
+}
 </script>
+{% endif %}
+
 {% endblock %}
