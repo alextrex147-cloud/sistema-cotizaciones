@@ -1,8 +1,8 @@
-
 import sys
 import os
 import json
-from datetime import date
+from datetime import date, datetime
+from zoneinfo import ZoneInfo
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -71,6 +71,136 @@ RESPONSABLES = [
     "Felipa"
 ]
 
+ZONA_LOCAL = ZoneInfo("America/La_Paz")
+
+
+# =========================================================
+# CONTADORES AUTOMÁTICOS POR RESPONSABLE
+# =========================================================
+
+def obtener_fecha_documento(documento):
+    valor = documento.get("created_at")
+
+    if not valor:
+        return None
+
+    try:
+        texto = str(valor).strip()
+
+        if texto.endswith("Z"):
+            texto = texto[:-1] + "+00:00"
+
+        fecha_hora = datetime.fromisoformat(texto)
+
+        if fecha_hora.tzinfo is None:
+            fecha_hora = fecha_hora.replace(
+                tzinfo=ZONA_LOCAL
+            )
+
+        return fecha_hora.astimezone(ZONA_LOCAL).date()
+
+    except (ValueError, TypeError, OverflowError):
+        try:
+            return date.fromisoformat(str(valor)[:10])
+        except (ValueError, TypeError):
+            return None
+
+
+def crear_resumen_responsables(cotizaciones, ventas):
+    hoy = datetime.now(ZONA_LOCAL).date()
+    resumen = []
+
+    def contar(documentos, periodo):
+        total = 0
+
+        for documento in documentos:
+            fecha_documento = obtener_fecha_documento(
+                documento
+            )
+
+            if fecha_documento is None:
+                continue
+
+            if periodo == "hoy":
+                if fecha_documento == hoy:
+                    total += 1
+
+            elif periodo == "mes":
+                if (
+                    fecha_documento.year == hoy.year
+                    and fecha_documento.month == hoy.month
+                ):
+                    total += 1
+
+        return total
+
+    for responsable in RESPONSABLES:
+        cotizaciones_persona = [
+            c for c in cotizaciones
+            if c.get("responsable") == responsable
+        ]
+
+        ventas_persona = [
+            v for v in ventas
+            if v.get("responsable") == responsable
+        ]
+
+        resumen.append({
+            "responsable": responsable,
+
+            "cotizaciones_hoy": contar(
+                cotizaciones_persona, "hoy"
+            ),
+
+            "ventas_hoy": contar(
+                ventas_persona, "hoy"
+            ),
+
+            "cotizaciones_mes": contar(
+                cotizaciones_persona, "mes"
+            ),
+
+            "ventas_mes": contar(
+                ventas_persona, "mes"
+            ),
+
+            "cotizaciones_total": len(
+                cotizaciones_persona
+            ),
+
+            "ventas_total": len(
+                ventas_persona
+            )
+        })
+
+    resumen_global = {
+        "cotizaciones_hoy": sum(
+            r["cotizaciones_hoy"] for r in resumen
+        ),
+
+        "ventas_hoy": sum(
+            r["ventas_hoy"] for r in resumen
+        ),
+
+        "cotizaciones_mes": sum(
+            r["cotizaciones_mes"] for r in resumen
+        ),
+
+        "ventas_mes": sum(
+            r["ventas_mes"] for r in resumen
+        ),
+
+        "cotizaciones_total": sum(
+            r["cotizaciones_total"] for r in resumen
+        ),
+
+        "ventas_total": sum(
+            r["ventas_total"] for r in resumen
+        )
+    }
+
+    return resumen, resumen_global
+
 
 # =========================================================
 # FUNCIONES AUXILIARES
@@ -84,7 +214,9 @@ def numero(valor, defecto=0):
 
 
 def obtener_responsable():
-    responsable = request.form.get("responsable", "").strip()
+    responsable = request.form.get(
+        "responsable", ""
+    ).strip()
 
     if responsable not in RESPONSABLES:
         return None
@@ -92,12 +224,18 @@ def obtener_responsable():
     return responsable
 
 
-def guardar_responsable(tabla, documento_id, responsable):
+def guardar_responsable(
+    tabla, documento_id, responsable
+):
     if tabla not in ("cotizaciones", "ventas"):
-        raise ValueError("Tabla de documento no válida.")
+        raise ValueError(
+            "Tabla de documento no válida."
+        )
 
     if responsable not in RESPONSABLES:
-        raise ValueError("Selecciona un responsable válido.")
+        raise ValueError(
+            "Selecciona un responsable válido."
+        )
 
     return (
         supabase.table(tabla)
@@ -110,7 +248,9 @@ def guardar_responsable(tabla, documento_id, responsable):
 def calcular_item(item):
     cantidad = numero(item.get("cantidad"), 0)
     precio = numero(item.get("precio"), 0)
-    tipo = str(item.get("tipo", "normal")).lower()
+    tipo = str(
+        item.get("tipo", "normal")
+    ).lower()
     medida = numero(item.get("medida"), 1)
 
     if tipo in ("metros", "kilos"):
@@ -131,11 +271,17 @@ def calcular_item(item):
 
 
 def leer_items():
-    items_json = request.form.get("items_json", "[]")
+    items_json = request.form.get(
+        "items_json", "[]"
+    )
 
     try:
         items = json.loads(items_json)
-    except (json.JSONDecodeError, TypeError, ValueError):
+    except (
+        json.JSONDecodeError,
+        TypeError,
+        ValueError
+    ):
         return []
 
     if not isinstance(items, list):
@@ -147,7 +293,9 @@ def leer_items():
         if not isinstance(item, dict):
             continue
 
-        nombre = str(item.get("nombre_producto", "")).strip()
+        nombre = str(
+            item.get("nombre_producto", "")
+        ).strip()
 
         if not nombre:
             continue
@@ -155,10 +303,16 @@ def leer_items():
         item["nombre_producto"] = nombre
         item = calcular_item(item)
 
-        if item["cantidad"] <= 0 or item["precio"] < 0:
+        if (
+            item["cantidad"] <= 0
+            or item["precio"] < 0
+        ):
             continue
 
-        if item["tipo"] in ("metros", "kilos") and item["medida"] <= 0:
+        if (
+            item["tipo"] in ("metros", "kilos")
+            and item["medida"] <= 0
+        ):
             continue
 
         items_finales.append(item)
@@ -167,10 +321,15 @@ def leer_items():
 
 
 def calcular_total(items):
-    return round(sum(item["total"] for item in items), 2)
+    return round(
+        sum(item["total"] for item in items),
+        2
+    )
 
 
-def render_formulario(modo, documento=None, detalles=None):
+def render_formulario(
+    modo, documento=None, detalles=None
+):
     return render_template(
         "crear_cotizacion.html",
         productos=listar_productos(),
@@ -193,11 +352,15 @@ def validar_fecha(fecha):
         return False
 
 
-def filtrar_por_fecha(documentos, desde="", hasta=""):
+def filtrar_por_fecha(
+    documentos, desde="", hasta=""
+):
     resultado = []
 
     for documento in documentos:
-        fecha = str(documento.get("created_at") or "")[:10]
+        fecha = str(
+            documento.get("created_at") or ""
+        )[:10]
 
         if not fecha:
             continue
@@ -224,6 +387,13 @@ def inicio():
     productos = listar_productos()
     clientes = listar_clientes()
 
+    resumen_responsables, resumen_global = (
+        crear_resumen_responsables(
+            cotizaciones,
+            ventas
+        )
+    )
+
     registros = []
 
     for c in cotizaciones[:10]:
@@ -232,9 +402,13 @@ def inicio():
         registros.append({
             "tipo": "Cotización",
             "numero": c.get("numero", ""),
-            "cliente": cliente.get("nombre", "Sin cliente"),
+            "cliente": cliente.get(
+                "nombre", "Sin cliente"
+            ),
             "total": c.get("total", 0),
-            "fecha": str(c.get("created_at", ""))[:10]
+            "fecha": str(
+                c.get("created_at") or ""
+            )[:10]
         })
 
     for v in ventas[:10]:
@@ -243,12 +417,19 @@ def inicio():
         registros.append({
             "tipo": "Venta",
             "numero": v.get("numero", ""),
-            "cliente": cliente.get("nombre", "Sin cliente"),
+            "cliente": cliente.get(
+                "nombre", "Sin cliente"
+            ),
             "total": v.get("total", 0),
-            "fecha": str(v.get("created_at", ""))[:10]
+            "fecha": str(
+                v.get("created_at") or ""
+            )[:10]
         })
 
-    registros.sort(key=lambda x: x["fecha"], reverse=True)
+    registros.sort(
+        key=lambda x: x["fecha"],
+        reverse=True
+    )
 
     return render_template(
         "inicio.html",
@@ -256,7 +437,9 @@ def inicio():
         cantidad_ventas=len(ventas),
         cantidad_productos=len(productos),
         cantidad_clientes=len(clientes),
-        registros=registros[:10]
+        registros=registros[:10],
+        resumen_responsables=resumen_responsables,
+        resumen_global=resumen_global
     )
 
 
@@ -267,6 +450,7 @@ def inicio():
 @app.route("/productos")
 def productos():
     buscar = request.args.get("buscar", "")
+
     return render_template(
         "productos.html",
         productos=listar_productos(buscar),
@@ -281,10 +465,14 @@ def producto_crear():
         numero(request.form.get("precio")),
         request.form["unidad"]
     )
+
     return redirect(url_for("productos"))
 
 
-@app.route("/productos/editar/<int:producto_id>", methods=["POST"])
+@app.route(
+    "/productos/editar/<int:producto_id>",
+    methods=["POST"]
+)
 def producto_editar(producto_id):
     actualizar_producto(
         producto_id,
@@ -292,6 +480,7 @@ def producto_editar(producto_id):
         numero(request.form.get("precio")),
         request.form["unidad"]
     )
+
     return redirect(url_for("productos"))
 
 
@@ -313,6 +502,7 @@ def api_productos():
 @app.route("/clientes")
 def clientes():
     buscar = request.args.get("buscar", "")
+
     return render_template(
         "clientes.html",
         clientes=listar_clientes(buscar),
@@ -320,13 +510,17 @@ def clientes():
     )
 
 
-@app.route("/clientes/editar/<int:cliente_id>", methods=["POST"])
+@app.route(
+    "/clientes/editar/<int:cliente_id>",
+    methods=["POST"]
+)
 def cliente_editar(cliente_id):
     actualizar_cliente(
         cliente_id,
         request.form["nombre"],
         request.form["telefono"]
     )
+
     return redirect(url_for("clientes"))
 
 
@@ -358,51 +552,91 @@ def nueva_cotizacion():
     return render_formulario("nueva")
 
 
-@app.route("/cotizaciones/guardar", methods=["POST"])
+@app.route(
+    "/cotizaciones/guardar",
+    methods=["POST"]
+)
 def guardar_cotizacion():
-    nombre = request.form.get("cliente_nombre", "").strip()
-    telefono = request.form.get("cliente_telefono", "").strip()
+    nombre = request.form.get(
+        "cliente_nombre", ""
+    ).strip()
+
+    telefono = request.form.get(
+        "cliente_telefono", ""
+    ).strip()
+
     responsable = obtener_responsable()
 
     if not nombre:
         flash("Escribe el nombre del cliente.")
-        return redirect(url_for("nueva_cotizacion"))
+        return redirect(
+            url_for("nueva_cotizacion")
+        )
 
     if not responsable:
-        flash("Selecciona quién realizó la cotización.")
-        return redirect(url_for("nueva_cotizacion"))
+        flash(
+            "Selecciona quién realizó la cotización."
+        )
+        return redirect(
+            url_for("nueva_cotizacion")
+        )
 
     items = leer_items()
 
     if not items:
         flash("Agrega al menos un producto.")
-        return redirect(url_for("nueva_cotizacion"))
+        return redirect(
+            url_for("nueva_cotizacion")
+        )
 
-    cliente = crear_o_actualizar_cliente(nombre, telefono)
-    total = calcular_total(items)
-
-    documento = crear_cotizacion(cliente["id"], items, total)
-
-    guardar_responsable(
-        "cotizaciones", documento["id"], responsable
+    cliente = crear_o_actualizar_cliente(
+        nombre, telefono
     )
 
-    return redirect(url_for(
-        "ver_cotizacion",
-        cotizacion_id=documento["id"]
-    ))
+    total = calcular_total(items)
+
+    documento = crear_cotizacion(
+        cliente["id"], items, total
+    )
+
+    guardar_responsable(
+        "cotizaciones",
+        documento["id"],
+        responsable
+    )
+
+    return redirect(
+        url_for(
+            "ver_cotizacion",
+            cotizacion_id=documento["id"]
+        )
+    )
 
 
-@app.route("/cotizaciones/<int:cotizacion_id>")
+@app.route(
+    "/cotizaciones/<int:cotizacion_id>"
+)
 def ver_cotizacion(cotizacion_id):
-    documento, detalles = obtener_cotizacion(cotizacion_id)
-    return render_formulario("ver", documento, detalles)
+    documento, detalles = obtener_cotizacion(
+        cotizacion_id
+    )
+
+    return render_formulario(
+        "ver", documento, detalles
+    )
 
 
-@app.route("/cotizaciones/editar/<int:cotizacion_id>")
+@app.route(
+    "/cotizaciones/editar/<int:cotizacion_id>"
+)
 def editar_cotizacion(cotizacion_id):
-    documento, detalles = obtener_cotizacion(cotizacion_id)
-    return render_formulario("editar", documento, detalles)
+    documento, detalles = obtener_cotizacion(
+        cotizacion_id
+    )
+
+    return render_formulario(
+        "editar", documento, detalles
+    )
 
 
 @app.route(
@@ -410,53 +644,80 @@ def editar_cotizacion(cotizacion_id):
     methods=["POST"]
 )
 def actualizar_cotizacion_ruta(cotizacion_id):
-    nombre = request.form.get("cliente_nombre", "").strip()
-    telefono = request.form.get("cliente_telefono", "").strip()
+    nombre = request.form.get(
+        "cliente_nombre", ""
+    ).strip()
+
+    telefono = request.form.get(
+        "cliente_telefono", ""
+    ).strip()
+
     responsable = obtener_responsable()
 
     if not nombre:
         flash("Escribe el nombre del cliente.")
-        return redirect(url_for(
-            "editar_cotizacion",
-            cotizacion_id=cotizacion_id
-        ))
+        return redirect(
+            url_for(
+                "editar_cotizacion",
+                cotizacion_id=cotizacion_id
+            )
+        )
 
     if not responsable:
-        flash("Selecciona quién realizó la cotización.")
-        return redirect(url_for(
-            "editar_cotizacion",
-            cotizacion_id=cotizacion_id
-        ))
+        flash(
+            "Selecciona quién realizó la cotización."
+        )
+        return redirect(
+            url_for(
+                "editar_cotizacion",
+                cotizacion_id=cotizacion_id
+            )
+        )
 
     items = leer_items()
 
     if not items:
         flash("Agrega al menos un producto.")
-        return redirect(url_for(
-            "editar_cotizacion",
-            cotizacion_id=cotizacion_id
-        ))
+        return redirect(
+            url_for(
+                "editar_cotizacion",
+                cotizacion_id=cotizacion_id
+            )
+        )
 
-    cliente = crear_o_actualizar_cliente(nombre, telefono)
+    cliente = crear_o_actualizar_cliente(
+        nombre, telefono
+    )
+
     total = calcular_total(items)
 
     actualizar_cotizacion(
-        cotizacion_id, cliente["id"], items, total
+        cotizacion_id,
+        cliente["id"],
+        items,
+        total
     )
 
     guardar_responsable(
-        "cotizaciones", cotizacion_id, responsable
+        "cotizaciones",
+        cotizacion_id,
+        responsable
     )
 
-    return redirect(url_for(
-        "ver_cotizacion",
-        cotizacion_id=cotizacion_id
-    ))
+    return redirect(
+        url_for(
+            "ver_cotizacion",
+            cotizacion_id=cotizacion_id
+        )
+    )
 
 
-@app.route("/cotizaciones/eliminar/<int:cotizacion_id>")
+@app.route(
+    "/cotizaciones/eliminar/<int:cotizacion_id>"
+)
 def eliminar_cotizacion_ruta(cotizacion_id):
     eliminar_cotizacion(cotizacion_id)
+
     return redirect(url_for("cotizaciones"))
 
 
@@ -464,29 +725,41 @@ def eliminar_cotizacion_ruta(cotizacion_id):
 # CONVERTIR COTIZACIÓN EN VENTA
 # =========================================================
 
-@app.route("/cotizaciones/<int:cotizacion_id>/convertir")
+@app.route(
+    "/cotizaciones/<int:cotizacion_id>/convertir"
+)
 def convertir_cotizacion_ruta(cotizacion_id):
-    cotizacion, detalles = obtener_cotizacion(cotizacion_id)
+    cotizacion, detalles = obtener_cotizacion(
+        cotizacion_id
+    )
 
     responsable = cotizacion.get("responsable")
 
     if responsable not in RESPONSABLES:
         flash(
             "Esta cotización no tiene responsable. "
-            "Edita la cotización y selecciona uno antes de convertirla."
+            "Edita la cotización y selecciona uno "
+            "antes de convertirla."
         )
-        return redirect(url_for(
-            "editar_cotizacion",
-            cotizacion_id=cotizacion_id
-        ))
+
+        return redirect(
+            url_for(
+                "editar_cotizacion",
+                cotizacion_id=cotizacion_id
+            )
+        )
 
     venta = convertir_cotizacion(cotizacion_id)
 
     guardar_responsable(
-        "ventas", venta["id"], responsable
+        "ventas",
+        venta["id"],
+        responsable
     )
 
-    return redirect(url_for("ver_venta", venta_id=venta["id"]))
+    return redirect(
+        url_for("ver_venta", venta_id=venta["id"])
+    )
 
 
 # =========================================================
@@ -495,7 +768,10 @@ def convertir_cotizacion_ruta(cotizacion_id):
 
 @app.route("/ventas")
 def ventas():
-    return render_template("ventas.html", ventas=listar_ventas())
+    return render_template(
+        "ventas.html",
+        ventas=listar_ventas()
+    )
 
 
 @app.route("/ventas/nueva")
@@ -505,8 +781,14 @@ def nueva_venta():
 
 @app.route("/ventas/guardar", methods=["POST"])
 def guardar_venta():
-    nombre = request.form.get("cliente_nombre", "").strip()
-    telefono = request.form.get("cliente_telefono", "").strip()
+    nombre = request.form.get(
+        "cliente_nombre", ""
+    ).strip()
+
+    telefono = request.form.get(
+        "cliente_telefono", ""
+    ).strip()
+
     responsable = obtener_responsable()
 
     if not nombre:
@@ -523,60 +805,111 @@ def guardar_venta():
         flash("Agrega al menos un producto.")
         return redirect(url_for("nueva_venta"))
 
-    cliente = crear_o_actualizar_cliente(nombre, telefono)
+    cliente = crear_o_actualizar_cliente(
+        nombre, telefono
+    )
+
     total = calcular_total(items)
 
-    documento = crear_venta(cliente["id"], items, total)
+    documento = crear_venta(
+        cliente["id"], items, total
+    )
 
-    guardar_responsable("ventas", documento["id"], responsable)
+    guardar_responsable(
+        "ventas",
+        documento["id"],
+        responsable
+    )
 
-    return redirect(url_for("ver_venta", venta_id=documento["id"]))
+    return redirect(
+        url_for(
+            "ver_venta",
+            venta_id=documento["id"]
+        )
+    )
 
 
 @app.route("/ventas/<int:venta_id>")
 def ver_venta(venta_id):
     documento, detalles = obtener_venta(venta_id)
-    return render_formulario("venta_ver", documento, detalles)
+
+    return render_formulario(
+        "venta_ver", documento, detalles
+    )
 
 
 @app.route("/ventas/editar/<int:venta_id>")
 def editar_venta(venta_id):
     documento, detalles = obtener_venta(venta_id)
-    return render_formulario("venta_editar", documento, detalles)
+
+    return render_formulario(
+        "venta_editar", documento, detalles
+    )
 
 
-@app.route("/ventas/actualizar/<int:venta_id>", methods=["POST"])
+@app.route(
+    "/ventas/actualizar/<int:venta_id>",
+    methods=["POST"]
+)
 def actualizar_venta_ruta(venta_id):
-    nombre = request.form.get("cliente_nombre", "").strip()
-    telefono = request.form.get("cliente_telefono", "").strip()
+    nombre = request.form.get(
+        "cliente_nombre", ""
+    ).strip()
+
+    telefono = request.form.get(
+        "cliente_telefono", ""
+    ).strip()
+
     responsable = obtener_responsable()
 
     if not nombre:
         flash("Escribe el nombre del cliente.")
-        return redirect(url_for("editar_venta", venta_id=venta_id))
+        return redirect(
+            url_for("editar_venta", venta_id=venta_id)
+        )
 
     if not responsable:
         flash("Selecciona quién realizó la venta.")
-        return redirect(url_for("editar_venta", venta_id=venta_id))
+        return redirect(
+            url_for("editar_venta", venta_id=venta_id)
+        )
 
     items = leer_items()
 
     if not items:
         flash("Agrega al menos un producto.")
-        return redirect(url_for("editar_venta", venta_id=venta_id))
+        return redirect(
+            url_for("editar_venta", venta_id=venta_id)
+        )
 
-    cliente = crear_o_actualizar_cliente(nombre, telefono)
+    cliente = crear_o_actualizar_cliente(
+        nombre, telefono
+    )
+
     total = calcular_total(items)
 
-    actualizar_venta(venta_id, cliente["id"], items, total)
-    guardar_responsable("ventas", venta_id, responsable)
+    actualizar_venta(
+        venta_id,
+        cliente["id"],
+        items,
+        total
+    )
 
-    return redirect(url_for("ver_venta", venta_id=venta_id))
+    guardar_responsable(
+        "ventas",
+        venta_id,
+        responsable
+    )
+
+    return redirect(
+        url_for("ver_venta", venta_id=venta_id)
+    )
 
 
 @app.route("/ventas/eliminar/<int:venta_id>")
 def eliminar_venta_ruta(venta_id):
     eliminar_venta(venta_id)
+
     return redirect(url_for("ventas"))
 
 
@@ -586,7 +919,10 @@ def eliminar_venta_ruta(venta_id):
 
 @app.route("/conteo-responsables")
 def conteo_responsables():
-    responsable = request.args.get("responsable", "").strip()
+    responsable = request.args.get(
+        "responsable", ""
+    ).strip()
+
     desde = request.args.get("desde", "").strip()
     hasta = request.args.get("hasta", "").strip()
 
@@ -600,7 +936,10 @@ def conteo_responsables():
         consultado = False
 
     if desde and hasta and desde > hasta:
-        flash("La fecha 'Desde' no puede ser posterior a 'Hasta'.")
+        flash(
+            "La fecha 'Desde' no puede ser posterior "
+            "a 'Hasta'."
+        )
         consultado = False
 
     if consultado:
@@ -625,7 +964,10 @@ def conteo_responsables():
             ventas_filtradas, desde, hasta
         )
 
-        total_cotizaciones = len(cotizaciones_filtradas)
+        total_cotizaciones = len(
+            cotizaciones_filtradas
+        )
+
         total_ventas = len(ventas_filtradas)
 
     return render_template(
@@ -644,10 +986,17 @@ def conteo_responsables():
 # PDF COTIZACIÓN
 # =========================================================
 
-@app.route("/cotizaciones/<int:cotizacion_id>/pdf")
+@app.route(
+    "/cotizaciones/<int:cotizacion_id>/pdf"
+)
 def pdf_cotizacion(cotizacion_id):
-    documento, detalles = obtener_cotizacion(cotizacion_id)
-    archivo = generar_pdf("cotizacion", documento, detalles)
+    documento, detalles = obtener_cotizacion(
+        cotizacion_id
+    )
+
+    archivo = generar_pdf(
+        "cotizacion", documento, detalles
+    )
 
     return send_file(
         archivo,
@@ -657,15 +1006,22 @@ def pdf_cotizacion(cotizacion_id):
     )
 
 
-@app.route("/cotizaciones/<int:cotizacion_id>/pdf/ver")
+@app.route(
+    "/cotizaciones/<int:cotizacion_id>/pdf/ver"
+)
 def ver_pdf_cotizacion(cotizacion_id):
-    documento, detalles = obtener_cotizacion(cotizacion_id)
+    documento, detalles = obtener_cotizacion(
+        cotizacion_id
+    )
 
     return render_template(
         "visor_pdf.html",
         tipo_documento="cotizacion",
         documento=documento,
-        pdf_url=url_for("pdf_cotizacion", cotizacion_id=cotizacion_id),
+        pdf_url=url_for(
+            "pdf_cotizacion",
+            cotizacion_id=cotizacion_id
+        ),
         imprimir_url=url_for(
             "solicitar_impresion_cotizacion",
             cotizacion_id=cotizacion_id
@@ -673,23 +1029,36 @@ def ver_pdf_cotizacion(cotizacion_id):
     )
 
 
-@app.route("/cotizaciones/<int:cotizacion_id>/imprimir", methods=["POST"])
+@app.route(
+    "/cotizaciones/<int:cotizacion_id>/imprimir",
+    methods=["POST"]
+)
 def solicitar_impresion_cotizacion(cotizacion_id):
-    documento, detalles = obtener_cotizacion(cotizacion_id)
+    documento, detalles = obtener_cotizacion(
+        cotizacion_id
+    )
 
     trabajo = crear_impresion(
-        "cotizacion", cotizacion_id, documento["numero"]
+        "cotizacion",
+        cotizacion_id,
+        documento["numero"]
     )
 
     if trabajo is None:
         return jsonify({
             "ok": False,
-            "mensaje": "No se pudo crear la solicitud de impresión."
+            "mensaje": (
+                "No se pudo crear la solicitud "
+                "de impresión."
+            )
         }), 500
 
     return jsonify({
         "ok": True,
-        "mensaje": f"La cotización {documento['numero']} fue enviada a impresión."
+        "mensaje": (
+            f"La cotización {documento['numero']} "
+            "fue enviada a impresión."
+        )
     })
 
 
@@ -700,7 +1069,10 @@ def solicitar_impresion_cotizacion(cotizacion_id):
 @app.route("/ventas/<int:venta_id>/pdf")
 def pdf_venta(venta_id):
     documento, detalles = obtener_venta(venta_id)
-    archivo = generar_pdf("venta", documento, detalles)
+
+    archivo = generar_pdf(
+        "venta", documento, detalles
+    )
 
     return send_file(
         archivo,
@@ -718,7 +1090,10 @@ def ver_pdf_venta(venta_id):
         "visor_pdf.html",
         tipo_documento="venta",
         documento=documento,
-        pdf_url=url_for("pdf_venta", venta_id=venta_id),
+        pdf_url=url_for(
+            "pdf_venta",
+            venta_id=venta_id
+        ),
         imprimir_url=url_for(
             "solicitar_impresion_venta",
             venta_id=venta_id
@@ -726,23 +1101,34 @@ def ver_pdf_venta(venta_id):
     )
 
 
-@app.route("/ventas/<int:venta_id>/imprimir", methods=["POST"])
+@app.route(
+    "/ventas/<int:venta_id>/imprimir",
+    methods=["POST"]
+)
 def solicitar_impresion_venta(venta_id):
     documento, detalles = obtener_venta(venta_id)
 
     trabajo = crear_impresion(
-        "venta", venta_id, documento["numero"]
+        "venta",
+        venta_id,
+        documento["numero"]
     )
 
     if trabajo is None:
         return jsonify({
             "ok": False,
-            "mensaje": "No se pudo crear la solicitud de impresión."
+            "mensaje": (
+                "No se pudo crear la solicitud "
+                "de impresión."
+            )
         }), 500
 
     return jsonify({
         "ok": True,
-        "mensaje": f"La venta {documento['numero']} fue enviada a impresión."
+        "mensaje": (
+            f"La venta {documento['numero']} "
+            "fue enviada a impresión."
+        )
     })
 
 
