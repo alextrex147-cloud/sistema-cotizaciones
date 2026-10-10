@@ -1,3 +1,4 @@
+```html
 {% extends "base.html" %}
 
 {% block contenido %}
@@ -15,7 +16,6 @@
 
 </div>
 
-
 <div class="tabla-contenedor">
 
     <table>
@@ -23,17 +23,14 @@
         <thead>
 
             <tr>
-
                 <th>NÚMERO</th>
                 <th>CLIENTE</th>
                 <th>TOTAL</th>
                 <th>FECHA</th>
                 <th>ACCIONES</th>
-
             </tr>
 
         </thead>
-
 
         <tbody>
 
@@ -61,33 +58,23 @@
 
                 <td>
 
+                    <!-- VER VENTA -->
                     <a
                         class="btn pequeño"
                         href="{{ url_for('ver_venta', venta_id=v.id) }}"
+                        title="Ver venta"
                     >
                         👁️
                     </a>
 
-                    <a
-                        class="btn pequeño"
-                        href="{{ url_for('editar_venta', venta_id=v.id) }}"
-                    >
-                        ✏️
-                    </a>
-
+                    <!-- IMPRIMIR VENTA EN PDF -->
                     <a
                         class="btn pequeño"
                         href="{{ url_for('pdf_venta', venta_id=v.id) }}"
+                        title="Imprimir venta"
+                        target="_blank"
                     >
                         📄
-                    </a>
-
-                    <a
-                        class="btn rojo pequeño"
-                        href="{{ url_for('eliminar_venta_ruta', venta_id=v.id) }}"
-                        onclick="return confirm('¿Eliminar venta?')"
-                    >
-                        🗑️
                     </a>
 
                 </td>
@@ -97,11 +84,9 @@
         {% else %}
 
             <tr>
-
                 <td colspan="5">
                     No hay ventas.
                 </td>
-
             </tr>
 
         {% endfor %}
@@ -113,3 +98,4 @@
 </div>
 
 {% endblock %}
+```
