@@ -1,1 +1,62 @@
 
+{% extends "base.html" %}
+
+{% block contenido %}
+
+<h1>📊 CONTEO POR RESPONSABLE</h1>
+
+<div class="formulario">
+    <h2>Selecciona un responsable</h2>
+
+    <form method="GET" action="{{ url_for('conteo_responsables') }}">
+
+        <label for="responsable">Responsable:</label>
+
+        <select name="responsable" id="responsable" required>
+            <option value="" selected disabled>-- Selecciona una persona --</option>
+            <option value="José Luis Quenta">José Luis Quenta</option>
+            <option value="Ayudante">Ayudante</option>
+            <option value="Felipa">Felipa</option>
+        </select>
+
+        <br><br>
+
+        <label for="desde">Desde:</label>
+        <input type="date" name="desde" id="desde">
+
+        <br><br>
+
+        <label for="hasta">Hasta:</label>
+        <input type="date" name="hasta" id="hasta">
+
+        <br><br>
+
+        <button type="submit" class="btn principal">
+            🔎 CONSULTAR
+        </button>
+
+    </form>
+</div>
+
+{% if consultado %}
+<div class="formulario">
+    <h2>Resultados de {{ responsable }}</h2>
+
+    <div class="grid-form">
+        <div>
+            <h3>🧾 Cotizaciones</h3>
+            <h2>{{ total_cotizaciones }}</h2>
+        </div>
+
+        <div>
+            <h3>💰 Ventas</h3>
+            <h2>{{ total_ventas }}</h2>
+        </div>
+    </div>
+
+    <h2>Total de documentos: {{ total_cotizaciones + total_ventas }}</h2>
+</div>
+{% endif %}
+
+{% endblock %}
+
