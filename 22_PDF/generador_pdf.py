@@ -41,7 +41,23 @@ def generar_pdf(tipo,documento,detalles):
     d,m,y=parts(documento);c.setFillColor(colors.black);c.setFont("Helvetica",9)
     for i,v in enumerate([d,m,y]):c.drawCentredString(fx+i*bw+bw/2,fy+1.8*mm,v)
     sy=T-58*mm;c.setFillColor(BLUE);c.setFont("Helvetica-Bold",8.2);c.drawString(L,sy,"Señor(es):");c.setStrokeColor(BLUE);c.setLineWidth(.6);c.line(L+22*mm,sy-1.2*mm,R-43*mm,sy-1.2*mm);c.drawString(R-41*mm,sy,"Telf.:");c.line(R-29*mm,sy-1.2*mm,R,sy-1.2*mm)
-    cliente=str(documento.get("cliente_nombre","") or documento.get("cliente","") or "");telefono=str(documento.get("cliente_telefono","") or documento.get("telefono","") or "");c.setFillColor(colors.black);c.setFont("Helvetica",8.2)
+   
+datos_cliente = documento.get("clientes") or {}
+
+cliente = str(
+    datos_cliente.get("nombre", "")
+    or documento.get("cliente_nombre", "")
+    or documento.get("cliente", "")
+    or ""
+)
+
+telefono = str(
+    datos_cliente.get("telefono", "")
+    or documento.get("cliente_telefono", "")
+    or documento.get("telefono", "")
+    or ""
+)
+
     if cliente:c.drawString(L+23*mm,sy,cliente)
     if telefono:c.drawString(R-28*mm,sy,telefono)
     top=sy-6*mm;bottom=43*mm;c1=L+24*mm;c2=R-53*mm;c3=R-27*mm;hh=9*mm
