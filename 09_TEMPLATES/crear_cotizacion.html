@@ -257,29 +257,15 @@
                     💰 Pasar a venta
                 </a>
 
-                <a class="boton boton-cancelar"
-                   href="{{ url_for('ver_pdf_cotizacion', cotizacion_id=documento.id) }}"
-                   target="_blank">
-                    📄 Abrir PDF
-                </a>
-
             {% else %}
                 <a class="boton boton-agregar"
                    href="{{ url_for('editar_venta', venta_id=documento.id) }}">
                     ✏️ Editar venta
                 </a>
 
-                <a class="boton boton-cancelar"
-                   href="{{ url_for('ver_pdf_venta', venta_id=documento.id) }}"
-                   target="_blank">
-                    📄 Abrir PDF
-                </a>
             {% endif %}
 
-            <button type="button" class="boton boton-cancelar"
-                    onclick="window.print()">
-                🖨️ Imprimir
-            </button>
+           
 
             <a class="boton boton-cancelar"
                href="{{ url_for('inicio') }}">
