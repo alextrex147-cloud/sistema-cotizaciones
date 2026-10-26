@@ -683,9 +683,7 @@ if descuento is None:
 
 total = round(subtotal - descuento, 2)
 
-    documento = crear_cotizacion(
-        cliente["id"], items, total
-    )
+    documento = crear_cotizacion(cliente["id"], items, total, descuento)
 
     guardar_responsable(
         "cotizaciones",
@@ -779,12 +777,7 @@ def actualizar_cotizacion_ruta(cotizacion_id):
 
     total = calcular_total(items)
 
-    actualizar_cotizacion(
-        cotizacion_id,
-        cliente["id"],
-        items,
-        total
-    )
+   actualizar_cotizacion(cotizacion_id, cliente["id"], items, total, descuento)
 
     guardar_responsable(
         "cotizaciones",
@@ -899,9 +892,8 @@ def guardar_venta():
 
     total = calcular_total(items)
 
-    documento = crear_venta(
-        cliente["id"], items, total
-    )
+    documento = crear_venta(cliente["id"], items, total, descuento)
+    
 
     guardar_responsable(
         "ventas",
@@ -976,12 +968,7 @@ def actualizar_venta_ruta(venta_id):
 
     total = calcular_total(items)
 
-    actualizar_venta(
-        venta_id,
-        cliente["id"],
-        items,
-        total
-    )
+   actualizar_venta(venta_id, cliente["id"], items, total, descuento)
 
     guardar_responsable(
         "ventas",
