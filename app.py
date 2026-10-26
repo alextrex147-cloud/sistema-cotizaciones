@@ -674,7 +674,7 @@ def guardar_cotizacion():
         nombre, telefono
     )
 
-      subtotal = calcular_total(items)
+    subtotal = calcular_total(items)
     descuento = obtener_descuento(subtotal)
 
     if descuento is None:
