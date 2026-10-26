@@ -489,11 +489,12 @@ function subtotal(producto) {
     return cantidad * precio;
 }
 
+
 function actualizarTotales() {
-    let total = 0;
+    let subtotalGeneral = 0;
 
     productos.forEach(producto => {
-        total += subtotal(producto);
+        subtotalGeneral += subtotal(producto);
 
         const fila = listaProductos.querySelector(
             '[data-id="' + producto.id + '"]'
@@ -501,18 +502,33 @@ function actualizarTotales() {
 
         if (fila) {
             const etiqueta = fila.querySelector(".subtotal");
+
             if (etiqueta) {
                 etiqueta.textContent = dinero(subtotal(producto));
             }
         }
     });
 
-    totalVisible.textContent = dinero(total);
+    const descuento = Math.max(
+        0,
+        numeroSeguro(descuentoInput.value)
+    );
+
+    const totalFinal = Math.max(
+        0,
+        subtotalGeneral - descuento
+    );
+
+    totalVisible.textContent = dinero(subtotalGeneral);
+    totalFinalVisible.textContent = dinero(totalFinal);
 
     itemsJson.value = JSON.stringify(
         productos.map(({ id, ...producto }) => producto)
     );
 }
+
+descuentoInput.addEventListener("input", actualizarTotales);
+
 
 function dibujarProductos() {
     listaProductos.innerHTML = "";
