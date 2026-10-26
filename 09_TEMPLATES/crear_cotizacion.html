@@ -516,11 +516,12 @@ function dibujarProductos() {
         fila.innerHTML = `
             <div class="campo campo-producto">
                 <label>Nombre del producto *</label>
-                <input type="text"
-                       data-campo="nombre_producto"
-                       value="${escaparHTML(producto.nombre_producto)}"
-                       placeholder="Ej. Calamina trapezoidal"
-                       required>
+               <input type="text"
+                      data-campo="nombre_producto"
+                      list="lista_nombres_productos"
+                      value="${escaparHTML(producto.nombre_producto)}"
+                      placeholder="Escribe o selecciona un producto"
+                      required>
             </div>
 
             <div class="campo">
