@@ -729,7 +729,18 @@ formulario.addEventListener("submit", evento => {
         alert("Revisa los productos, cantidades, medidas y precios.");
         return;
     }
+const subtotalGeneral = productos.reduce(
+    (suma, producto) => suma + subtotal(producto),
+    0
+);
 
+const descuento = numeroSeguro(descuentoInput.value);
+
+if (descuento < 0 || descuento > subtotalGeneral) {
+    evento.preventDefault();
+    alert("El descuento no puede ser negativo ni superar el subtotal.");
+    return;
+}
     itemsJson.value = JSON.stringify(
         productos.map(({ id, ...producto }) => producto)
     );
