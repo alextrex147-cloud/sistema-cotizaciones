@@ -674,21 +674,17 @@ def guardar_cotizacion():
         nombre, telefono
     )
 
-   subtotal = calcular_total(items)
-descuento = obtener_descuento(subtotal)
+      subtotal = calcular_total(items)
+    descuento = obtener_descuento(subtotal)
 
-if descuento is None:
-    flash("El descuento no puede ser negativo ni superar el subtotal.")
-    return redirect(request.referrer or url_for("inicio"))
+    if descuento is None:
+        flash("El descuento no puede ser negativo ni superar el subtotal.")
+        return redirect(url_for("nueva_cotizacion"))
 
-total = round(subtotal - descuento, 2)
+    total = round(subtotal - descuento, 2)
 
-    documento = crear_cotizacion(cliente["id"], items, total, descuento)
-
-    guardar_responsable(
-        "cotizaciones",
-        documento["id"],
-        responsable
+    documento = crear_cotizacion(
+        cliente["id"], items, total, descuento
     )
 
     return redirect(
@@ -775,10 +771,23 @@ def actualizar_cotizacion_ruta(cotizacion_id):
         nombre, telefono
     )
 
-    total = calcular_total(items)
+      subtotal = calcular_total(items)
+    descuento = obtener_descuento(subtotal)
 
-   actualizar_cotizacion(cotizacion_id, cliente["id"], items, total, descuento)
+    if descuento is None:
+        flash("El descuento no puede ser negativo ni superar el subtotal.")
+        return redirect(
+            url_for(
+                "editar_cotizacion",
+                cotizacion_id=cotizacion_id
+            )
+        )
 
+    total = round(subtotal - descuento, 2)
+
+    actualizar_cotizacion(
+        cotizacion_id, cliente["id"], items, total, descuento
+    )
     guardar_responsable(
         "cotizaciones",
         cotizacion_id,
@@ -890,9 +899,18 @@ def guardar_venta():
         nombre, telefono
     )
 
-    total = calcular_total(items)
+       subtotal = calcular_total(items)
+    descuento = obtener_descuento(subtotal)
 
-    documento = crear_venta(cliente["id"], items, total, descuento)
+    if descuento is None:
+        flash("El descuento no puede ser negativo ni superar el subtotal.")
+        return redirect(url_for("nueva_venta"))
+
+    total = round(subtotal - descuento, 2)
+
+    documento = crear_venta(
+        cliente["id"], items, total, descuento
+    )
     
 
     guardar_responsable(
@@ -966,9 +984,20 @@ def actualizar_venta_ruta(venta_id):
         nombre, telefono
     )
 
-    total = calcular_total(items)
+      subtotal = calcular_total(items)
+    descuento = obtener_descuento(subtotal)
 
-   actualizar_venta(venta_id, cliente["id"], items, total, descuento)
+    if descuento is None:
+        flash("El descuento no puede ser negativo ni superar el subtotal.")
+        return redirect(
+            url_for("editar_venta", venta_id=venta_id)
+        )
+
+    total = round(subtotal - descuento, 2)
+
+    actualizar_venta(
+        venta_id, cliente["id"], items, total, descuento
+    )
 
     guardar_responsable(
         "ventas",
