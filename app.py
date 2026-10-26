@@ -330,11 +330,13 @@ def calcular_total(items):
 def render_formulario(
     modo, documento=None, detalles=None
 ):
+    nombres_guardados = listar_nombres_productos()
     return render_template(
         "crear_cotizacion.html",
         productos=listar_productos(),
         clientes=listar_clientes(),
         responsables=RESPONSABLES,
+        nombres_guardados=nombres_guardados,
         modo=modo,
         documento=documento,
         detalles=detalles or []
