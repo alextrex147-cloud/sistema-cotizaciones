@@ -1,4 +1,4 @@
-from io import BytesIO
+ from io import BytesIO
 from pathlib import Path
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
