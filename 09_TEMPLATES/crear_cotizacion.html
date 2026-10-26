@@ -363,7 +363,11 @@
                 </p>
 
                 <div id="listaProductos"></div>
-
+                <datalist id="lista_nombres_productos">
+                 {% for item in nombres_guardados %}
+                   <option value="{{ item.nombre }}"></option>
+                 {% endfor %}
+                </datalist>
                 <button type="button"
                         class="boton boton-agregar"
                         id="btnAgregar">
