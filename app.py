@@ -326,6 +326,14 @@ def calcular_total(items):
         2
     )
 
+def obtener_descuento(total):
+    descuento = numero(request.form.get("descuento"), 0)
+
+    if descuento < 0 or descuento > total:
+        return None
+
+    return round(descuento, 2)
+
 
 def render_formulario(
     modo, documento=None, detalles=None
