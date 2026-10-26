@@ -443,7 +443,78 @@ def inicio():
         resumen_responsables=resumen_responsables,
         resumen_global=resumen_global
     )
+# =========================================================
+# NOMBRES GUARDADOS DE PRODUCTOS
+# =========================================================
 
+def listar_nombres_productos():
+    respuesta = (
+        supabase.table("nombres_productos")
+        .select("id, nombre")
+        .order("nombre")
+        .execute()
+    )
+    return respuesta.data or []
+
+
+@app.route("/nombres-productos", methods=["GET"])
+def nombres_productos():
+    nombres = listar_nombres_productos()
+
+    return render_template(
+        "nombres_productos.html",
+        nombres=nombres
+    )
+
+
+@app.route("/nombres-productos/guardar", methods=["POST"])
+def guardar_nombre_producto():
+    nombre = request.form.get("nombre", "").strip()
+
+    if not nombre:
+        flash("Escribe el nombre del producto.")
+        return redirect(url_for("nombres_productos"))
+
+    try:
+        existentes = (
+            supabase.table("nombres_productos")
+            .select("id")
+            .ilike("nombre", nombre)
+            .execute()
+        )
+
+        if existentes.data:
+            flash("Ese nombre ya está guardado.")
+        else:
+            supabase.table("nombres_productos").insert({
+                "nombre": nombre
+            }).execute()
+
+            flash("Nombre guardado correctamente.")
+
+    except Exception:
+        flash("No se pudo guardar el nombre. Revisa Supabase.")
+
+    return redirect(url_for("nombres_productos"))
+
+
+@app.route(
+    "/nombres-productos/eliminar/<int:nombre_id>",
+    methods=["POST"]
+)
+def eliminar_nombre_producto(nombre_id):
+    try:
+        (
+            supabase.table("nombres_productos")
+            .delete()
+            .eq("id", nombre_id)
+            .execute()
+        )
+        flash("Nombre eliminado.")
+    except Exception:
+        flash("No se pudo eliminar el nombre.")
+
+    return redirect(url_for("nombres_productos"))
 
 # =========================================================
 # PRODUCTOS
