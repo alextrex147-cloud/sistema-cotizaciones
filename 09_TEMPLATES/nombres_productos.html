@@ -1,0 +1,81 @@
+
+{% extends "base.html" %}
+
+{% block contenido %}
+
+<div style="max-width:900px;margin:25px auto;padding:20px;">
+
+    <h1>🏷️ Nombres de productos</h1>
+
+    <p>
+        Guarda aquí los nombres que utilizas frecuentemente.
+        Después podrás seleccionarlos al crear cotizaciones o ventas.
+    </p>
+
+    {% with mensajes = get_flashed_messages() %}
+        {% if mensajes %}
+            {% for mensaje in mensajes %}
+                <p style="padding:12px;background:#eef4ff;border-radius:8px;">
+                    {{ mensaje }}
+                </p>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <section style="padding:20px;border:1px solid #ddd;border-radius:12px;margin:20px 0;">
+        <h2>Agregar nombre</h2>
+
+        <form method="POST"
+              action="{{ url_for('guardar_nombre_producto') }}">
+
+            <label for="nombre">Nombre del producto</label>
+
+            <input
+                type="text"
+                id="nombre"
+                name="nombre"
+                placeholder="Ej. Ferfon 80*40"
+                maxlength="200"
+                required
+                style="width:100%;box-sizing:border-box;padding:12px;margin:10px 0;"
+            >
+
+            <button type="submit"
+                    style="padding:12px 18px;background:#167d45;color:white;border:0;border-radius:7px;cursor:pointer;">
+                💾 Guardar nombre
+            </button>
+        </form>
+    </section>
+
+    <section style="padding:20px;border:1px solid #ddd;border-radius:12px;">
+        <h2>Nombres guardados ({{ nombres|length }})</h2>
+
+        {% if nombres %}
+            {% for item in nombres %}
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #eee;">
+
+                    <span>{{ item.nombre }}</span>
+
+                    <form method="POST"
+                          action="{{ url_for('eliminar_nombre_producto', nombre_id=item.id) }}"
+                          onsubmit="return confirm('¿Eliminar este nombre guardado?');">
+
+                        <button type="submit"
+                                style="padding:8px 12px;background:#ffe7e7;color:#a40000;border:0;border-radius:7px;cursor:pointer;">
+                            🗑️ Eliminar
+                        </button>
+                    </form>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>Todavía no guardaste ningún nombre.</p>
+        {% endif %}
+    </section>
+
+    <p style="margin-top:20px;">
+        <a href="{{ url_for('inicio') }}">⬅ Volver al inicio</a>
+    </p>
+
+</div>
+
+{% endblock %}
