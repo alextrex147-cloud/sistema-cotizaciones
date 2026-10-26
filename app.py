@@ -771,7 +771,7 @@ def actualizar_cotizacion_ruta(cotizacion_id):
         nombre, telefono
     )
 
-      subtotal = calcular_total(items)
+    subtotal = calcular_total(items)
     descuento = obtener_descuento(subtotal)
 
     if descuento is None:
