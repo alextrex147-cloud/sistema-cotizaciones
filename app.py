@@ -899,7 +899,7 @@ def guardar_venta():
         nombre, telefono
     )
 
-       subtotal = calcular_total(items)
+    subtotal = calcular_total(items)
     descuento = obtener_descuento(subtotal)
 
     if descuento is None:
@@ -984,7 +984,7 @@ def actualizar_venta_ruta(venta_id):
         nombre, telefono
     )
 
-      subtotal = calcular_total(items)
+    subtotal = calcular_total(items)
     descuento = obtener_descuento(subtotal)
 
     if descuento is None:
