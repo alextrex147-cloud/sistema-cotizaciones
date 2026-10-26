@@ -1,8 +1,8 @@
+
 from conexion import supabase
 
 
 def siguiente_numero():
-
     respuesta = supabase.table(
         "cotizaciones"
     ).select(
@@ -18,9 +18,7 @@ def siguiente_numero():
     ultimo = respuesta.data[0]["numero"]
 
     try:
-        numero = int(
-            ultimo.split("-")[1]
-        ) + 1
+        numero = int(ultimo.split("-")[1]) + 1
     except Exception:
         numero = 1
 
@@ -28,7 +26,6 @@ def siguiente_numero():
 
 
 def listar_cotizaciones():
-
     respuesta = supabase.table(
         "cotizaciones"
     ).select(
@@ -41,10 +38,7 @@ def listar_cotizaciones():
     return respuesta.data or []
 
 
-def obtener_cotizacion(
-    cotizacion_id
-):
-
+def obtener_cotizacion(cotizacion_id):
     cotizacion = supabase.table(
         "cotizaciones"
     ).select(
@@ -63,18 +57,10 @@ def obtener_cotizacion(
         "id"
     ).execute()
 
-    return (
-        cotizacion.data,
-        detalles.data or []
-    )
+    return cotizacion.data, detalles.data or []
 
 
-def crear_cotizacion(
-    cliente_id,
-    items,
-    total
-):
-
+def crear_cotizacion(cliente_id, items, total, descuento=0):
     numero = siguiente_numero()
 
     cabecera = supabase.table(
@@ -83,122 +69,75 @@ def crear_cotizacion(
         "numero": numero,
         "cliente_id": cliente_id,
         "total": total,
+        "descuento": descuento,
         "estado": "cotizacion"
     }).execute()
 
     cotizacion = cabecera.data[0]
-
     detalles = []
 
     for item in items:
-
         detalles.append({
-            "cotizacion_id":
-                cotizacion["id"],
-
-            "producto_id":
-                item.get("producto_id"),
-
-            "nombre_producto":
-                item["nombre_producto"],
-
-            "cantidad":
-                item["cantidad"],
-
-            "tipo":
-                item["tipo"],
-
-            "medida":
-                item.get("medida"),
-
-            "precio":
-                item["precio"],
-
-            "total":
-                item["total"]
+            "cotizacion_id": cotizacion["id"],
+            "producto_id": item.get("producto_id"),
+            "nombre_producto": item["nombre_producto"],
+            "cantidad": item["cantidad"],
+            "tipo": item["tipo"],
+            "medida": item.get("medida"),
+            "precio": item["precio"],
+            "total": item["total"]
         })
 
     if detalles:
-
         supabase.table(
             "cotizacion_productos"
-        ).insert(
-            detalles
-        ).execute()
+        ).insert(detalles).execute()
 
     return cotizacion
 
 
 def actualizar_cotizacion(
-    cotizacion_id,
-    cliente_id,
-    items,
-    total
+    cotizacion_id, cliente_id, items, total, descuento=0
 ):
-
     supabase.table(
         "cotizaciones"
     ).update({
         "cliente_id": cliente_id,
-        "total": total
+        "total": total,
+        "descuento": descuento
     }).eq(
-        "id",
-        cotizacion_id
+        "id", cotizacion_id
     ).execute()
 
     supabase.table(
         "cotizacion_productos"
     ).delete().eq(
-        "cotizacion_id",
-        cotizacion_id
+        "cotizacion_id", cotizacion_id
     ).execute()
 
     detalles = []
 
     for item in items:
-
         detalles.append({
-            "cotizacion_id":
-                cotizacion_id,
-
-            "producto_id":
-                item.get("producto_id"),
-
-            "nombre_producto":
-                item["nombre_producto"],
-
-            "cantidad":
-                item["cantidad"],
-
-            "tipo":
-                item["tipo"],
-
-            "medida":
-                item.get("medida"),
-
-            "precio":
-                item["precio"],
-
-            "total":
-                item["total"]
+            "cotizacion_id": cotizacion_id,
+            "producto_id": item.get("producto_id"),
+            "nombre_producto": item["nombre_producto"],
+            "cantidad": item["cantidad"],
+            "tipo": item["tipo"],
+            "medida": item.get("medida"),
+            "precio": item["precio"],
+            "total": item["total"]
         })
 
     if detalles:
-
         supabase.table(
             "cotizacion_productos"
-        ).insert(
-            detalles
-        ).execute()
+        ).insert(detalles).execute()
 
 
-def eliminar_cotizacion(
-    cotizacion_id
-):
-
+def eliminar_cotizacion(cotizacion_id):
     return supabase.table(
         "cotizaciones"
     ).delete().eq(
-        "id",
-        cotizacion_id
+        "id", cotizacion_id
     ).execute()
