@@ -674,7 +674,14 @@ def guardar_cotizacion():
         nombre, telefono
     )
 
-    total = calcular_total(items)
+   subtotal = calcular_total(items)
+descuento = obtener_descuento(subtotal)
+
+if descuento is None:
+    flash("El descuento no puede ser negativo ni superar el subtotal.")
+    return redirect(request.referrer or url_for("inicio"))
+
+total = round(subtotal - descuento, 2)
 
     documento = crear_cotizacion(
         cliente["id"], items, total
